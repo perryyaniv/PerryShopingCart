@@ -46,7 +46,19 @@ function App() {
     }
   };
 
-  // 4. Delete a task
+  // 4. Delete all tasks
+  const deleteAll = async () => {
+    if (tasks.length === 0) return;
+    if (!confirm('Are you sure you want to delete ALL tasks?')) return;
+    try {
+      await Promise.all(tasks.map(task => axios.delete(`http://localhost:5000/tasks/${task._id}`)));
+      setTasks([]);
+    } catch (error) {
+      console.error("Error deleting all tasks:", error);
+    }
+  };
+
+  // 5. Delete a task
   const deleteTask = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/tasks/${id}`);
@@ -71,13 +83,21 @@ function App() {
           Add Task
         </button>
       </div>
+      {tasks.length > 0 && (
+        <button onClick={deleteAll} className="delete-all-btn">
+          Delete All
+        </button>
+      )}
       <ul className="task-list animate-slide-up">
         {tasks.map(task => (
           <li key={task._id} className={`task-item ${task.completed ? 'completed' : ''}`}>
+            <input 
+              type="checkbox" 
+              checked={task.completed} 
+              onChange={() => toggleComplete(task._id, task.completed)}
+              className="task-checkbox"
+            />
             <span className={`task-title ${task.completed ? 'completed-text' : ''}`}>{task.title}</span>
-            <button onClick={() => toggleComplete(task._id, task.completed)} className="complete-btn animate-pop">
-              {task.completed ? 'Undo' : 'Done'}
-            </button>
             <button onClick={() => deleteTask(task._id)} className="delete-btn animate-pop">
               Delete
             </button>

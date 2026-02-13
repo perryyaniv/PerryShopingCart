@@ -67,6 +67,24 @@ body {
   transform: scale(1.05);
 }
 
+.delete-all-btn {
+  background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(255,107,107,0.08);
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.delete-all-btn:hover {
+  background: linear-gradient(90deg, #ee5a6f 0%, #ff6b6b 100%);
+  transform: scale(1.05);
+}
+
 .task-list {
   list-style: none;
   padding: 0;
@@ -81,7 +99,7 @@ body {
   padding: 0.9em 1.1em;
   display: flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.8em;
   box-shadow: 0 2px 8px rgba(33,150,243,0.04);
   transition: transform 0.18s, box-shadow 0.18s, background 0.2s, border-color 0.2s;
   animation: slide-up 0.5s cubic-bezier(0.23, 1, 0.32, 1);
@@ -89,6 +107,19 @@ body {
 .task-item:hover {
   transform: scale(1.03) translateY(-2px);
   box-shadow: 0 4px 16px #1de9b633;
+}
+
+.task-checkbox {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  accent-color: #1de9b6;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.task-checkbox:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 4px #1de9b6);
 }
 .task-title {
   flex: 1;
@@ -113,25 +144,6 @@ body {
   background: linear-gradient(90deg, #1de9b6 0%, #2196f3 100%);
   color: #fff;
   transform: scale(1.08) rotate(-2deg);
-}
-
-.complete-btn {
-  background: linear-gradient(90deg, #1de9b6 0%, #2196f3 100%);
-  color: #0f2027;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5em 1em;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-right: 8px;
-  box-shadow: 0 2px 8px rgba(29,233,182,0.08);
-  transition: background 0.2s, color 0.2s, transform 0.1s;
-}
-.complete-btn:hover {
-  background: linear-gradient(90deg, #2196f3 0%, #1de9b6 100%);
-  color: #fff;
-  transform: scale(1.08);
 }
 
 .task-item.completed {
