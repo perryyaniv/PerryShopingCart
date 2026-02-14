@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import './App.css'
+import useConnectionStatus from './hooks/useConnectionStatus'
+import ConnectionIndicator from './components/ConnectionIndicator'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://perry-shopping-server.onrender.com';
 
@@ -19,6 +21,7 @@ function App() {
   const [processingItems, setProcessingItems] = useState(new Set())
   const processingRef = useRef(new Set())
   const [showDemonicMessage, setShowDemonicMessage] = useState(false)
+  const connectionStatus = useConnectionStatus(API_BASE_URL)
 
   // Fetch active list and past users on mount
   useEffect(() => {
@@ -427,6 +430,7 @@ function App() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <ConnectionIndicator status={connectionStatus} darkMode={darkMode} serverUrl={API_BASE_URL} />
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className={`p-2.5 rounded-lg transition-all duration-300 ${
