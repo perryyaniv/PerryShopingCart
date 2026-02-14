@@ -22,6 +22,8 @@ function App() {
   const processingRef = useRef(new Set())
   const [showDemonicMessage, setShowDemonicMessage] = useState(false)
   const connectionStatus = useConnectionStatus(API_BASE_URL)
+  const [editingQuantity, setEditingQuantity] = useState(null)
+  const [editQuantityValue, setEditQuantityValue] = useState('')
 
   // Fetch active list and past users on mount
   useEffect(() => {
@@ -160,6 +162,35 @@ function App() {
       setActiveList(response.data)
     } catch (error) {
       console.error('Error deleting item:', error)
+    }
+  }
+
+  const startEditingQuantity = (itemId, currentQuantity) => {
+    setEditingQuantity(itemId)
+    setEditQuantityValue(currentQuantity.toString())
+  }
+
+  const cancelEditingQuantity = () => {
+    setEditingQuantity(null)
+    setEditQuantityValue('')
+  }
+
+  const updateQuantity = async (itemId) => {
+    const newQuantity = parseInt(editQuantityValue)
+    if (isNaN(newQuantity) || newQuantity < 1) {
+      alert('Please enter a valid quantity (1 or more)')
+      return
+    }
+
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/list/active/items/${itemId}`,
+        { quantity: newQuantity }
+      )
+      setActiveList(response.data)
+      cancelEditingQuantity()
+    } catch (error) {
+      console.error('Error updating quantity:', error)
     }
   }
 
@@ -847,15 +878,60 @@ function App() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                      <span
-                        className={`px-2.5 py-1 rounded-full font-medium ${
-                          darkMode
-                            ? 'bg-blue-900/30 text-blue-300'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        Qty: {item.quantity}
-                      </span>
+                      {editingQuantity === item._id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            value={editQuantityValue}
+                            onChange={(e) => setEditQuantityValue(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                updateQuantity(item._id)
+                              } else if (e.key === 'Escape') {
+                                cancelEditingQuantity()
+                              }
+                            }}
+                            min="1"
+                            autoFocus
+                            className={`w-16 px-2 py-1 rounded border text-xs ${
+                              darkMode
+                                ? 'bg-slate-800 border-blue-500 text-white'
+                                : 'bg-white border-blue-500 text-gray-900'
+                            } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+                          />
+                          <button
+                            onClick={() => updateQuantity(item._id)}
+                            className={`px-2 py-1 rounded font-medium ${
+                              darkMode
+                                ? 'bg-green-600 hover:bg-green-500 text-white'
+                                : 'bg-green-600 hover:bg-green-700 text-white'
+                            }`}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEditingQuantity}
+                            className={`px-2 py-1 rounded font-medium ${
+                              darkMode
+                                ? 'bg-red-600 hover:bg-red-500 text-white'
+                                : 'bg-red-600 hover:bg-red-700 text-white'
+                            }`}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => startEditingQuantity(item._id, item.quantity)}
+                          className={`px-2.5 py-1 rounded-full font-medium transition-all ${
+                            darkMode
+                              ? 'bg-blue-900/30 text-blue-300 hover:bg-blue-900/50'
+                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                          }`}
+                        >
+                          Qty: {item.quantity}
+                        </button>
+                      )}
                       <span
                         className={`px-2.5 py-1 rounded-full font-medium ${
                           darkMode
