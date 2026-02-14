@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import './App.css'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://perry-shopping-server.onrender.com';
+
 function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [userName, setUserName] = useState('')
@@ -35,7 +37,7 @@ function App() {
 
   const fetchActiveList = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/list/active')
+      const response = await axios.get(`${API_BASE_URL}/list/active`)
       setActiveList(response.data)
     } catch (error) {
       console.error('Error fetching list:', error)
@@ -44,7 +46,7 @@ function App() {
 
   const fetchHistory = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/list/history')
+      const response = await axios.get(`${API_BASE_URL}/list/history`)
       setHistoryList(response.data)
     } catch (error) {
       console.error('Error fetching history:', error)
@@ -101,7 +103,7 @@ function App() {
         addedBy: currentUser
       }
 
-      const response = await axios.post('http://localhost:5000/list/active/items', newItem)
+      const response = await axios.post(`${API_BASE_URL}/list/active/items`, newItem)
       setActiveList(response.data)
 
       setItemName('')
@@ -127,7 +129,7 @@ function App() {
     try {
       // Mark as purchased - server will archive and remove it
       const response = await axios.patch(
-        `http://localhost:5000/list/active/items/${itemId}`,
+        `${API_BASE_URL}/list/active/items/${itemId}`,
         { purchased: true }
       )
       setActiveList(response.data)
@@ -150,7 +152,7 @@ function App() {
   const deleteItem = async (itemId) => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/list/active/items/${itemId}`
+        `${API_BASE_URL}/list/active/items/${itemId}`
       )
       setActiveList(response.data)
     } catch (error) {
@@ -161,7 +163,7 @@ function App() {
   const copyFromHistory = async (historyId) => {
     try {
       const response = await axios.post(
-        `http://localhost:5000/list/copy-from-history/${historyId}`
+        `${API_BASE_URL}/list/copy-from-history/${historyId}`
       )
       setActiveList(response.data)
       setActiveTab('active')
@@ -192,7 +194,7 @@ function App() {
         addedBy: currentUser
       }
 
-      const response = await axios.post('http://localhost:5000/list/active/items', newItem)
+      const response = await axios.post(`${API_BASE_URL}/list/active/items`, newItem)
       setActiveList(response.data)
     } catch (error) {
       console.error('Error adding item from history:', error)
@@ -201,7 +203,7 @@ function App() {
 
   const archiveList = async () => {
     try {
-      await axios.post('http://localhost:5000/list/archive')
+      await axios.post(`${API_BASE_URL}/list/archive`)
       fetchActiveList()
       fetchHistory()
     } catch (error) {
@@ -212,7 +214,7 @@ function App() {
   const clearList = async () => {
     if (window.confirm('Clear the entire list?')) {
       try {
-        const response = await axios.post('http://localhost:5000/list/clear')
+        const response = await axios.post(`${API_BASE_URL}/list/clear`)
         setActiveList(response.data)
       } catch (error) {
         console.error('Error clearing list:', error)
@@ -223,7 +225,7 @@ function App() {
   const deleteHistoryEntry = async (historyId) => {
     if (window.confirm('Delete this shopping list from history?')) {
       try {
-        const response = await axios.delete(`http://localhost:5000/list/history/${historyId}`)
+        const response = await axios.delete(`${API_BASE_URL}/list/history/${historyId}`)
         setHistoryList(response.data)
       } catch (error) {
         console.error('Error deleting history entry:', error)
@@ -234,7 +236,7 @@ function App() {
   const deleteHistoryItem = async (historyId, itemId) => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/list/history/${historyId}/items/${itemId}`
+        `${API_BASE_URL}/list/history/${historyId}/items/${itemId}`
       )
       setHistoryList(response.data)
     } catch (error) {
@@ -245,7 +247,7 @@ function App() {
   const clearAllHistory = async () => {
     if (window.confirm('Delete ALL shopping history? This cannot be undone.')) {
       try {
-        await axios.delete('http://localhost:5000/list/history')
+        await axios.delete(`${API_BASE_URL}/list/history`)
         setHistoryList([])
       } catch (error) {
         console.error('Error clearing history:', error)
