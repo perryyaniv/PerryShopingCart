@@ -30,7 +30,9 @@ body {
 .input-container {
   display: flex;
   justify-content: center;
+  gap: 0.5rem;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 .futuristic-input {
@@ -43,10 +45,37 @@ body {
   outline: none;
   transition: border 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+  flex: 1;
+  min-width: 150px;
 }
 .futuristic-input:focus {
   border-color: #1de9b6;
   box-shadow: 0 0 8px #1de9b6;
+}
+
+.priority-select,
+.date-input {
+  background: #1a2a3a;
+  border: 1.5px solid #2196f3;
+  color: #eafaf1;
+  padding: 0.7em 0.8em;
+  font-size: 1.1rem;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+  font-family: inherit;
+  cursor: pointer;
+}
+.priority-select:focus,
+.date-input:focus {
+  border-color: #1de9b6;
+  box-shadow: 0 0 8px #1de9b6;
+}
+
+.priority-select option,
+.date-input option {
+  background: #1a2a3a;
+  color: #eafaf1;
 }
 
 .futuristic-btn {
@@ -93,7 +122,7 @@ body {
 
 .task-item {
   background: rgba(33, 150, 243, 0.10);
-  border: 1.5px solid #1de9b6;
+  border: 2px solid #1de9b6;
   border-radius: 10px;
   margin-bottom: 1.1rem;
   padding: 0.9em 1.1em;
@@ -107,6 +136,23 @@ body {
 .task-item:hover {
   transform: scale(1.03) translateY(-2px);
   box-shadow: 0 4px 16px #1de9b633;
+}
+
+/* Priority Colors */
+.task-item.priority-urgent {
+  border-color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.08);
+}
+.task-item.priority-normal {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+/* Overdue Task */
+.task-item.overdue {
+  border-color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.15) !important;
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.2);
 }
 
 .task-checkbox {
@@ -126,6 +172,42 @@ body {
   font-size: 1.15rem;
   color: #eafaf1;
   letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.task-title:hover {
+  color: #1de9b6;
+}
+
+.overdue-badge {
+  margin-left: 0.5em;
+  color: #ff6b6b;
+  font-weight: bold;
+  font-size: 0.85em;
+}
+
+.task-date {
+  font-size: 0.9rem;
+  color: #90a4ae;
+  margin-right: 0.5em;
+  white-space: nowrap;
+}
+
+.task-edit-input {
+  flex: 1;
+  background: rgba(26, 42, 58, 0.9);
+  border: 2px solid #1de9b6;
+  color: #eafaf1;
+  border-radius: 6px;
+  padding: 0.5em 0.8em;
+  font-size: 1.15rem;
+  outline: none;
+  font-family: inherit;
+  box-shadow: 0 0 8px #1de9b655;
+  transition: box-shadow 0.2s;
+}
+.task-edit-input:focus {
+  box-shadow: 0 0 12px #1de9b6aa;
 }
 .delete-btn {
   background: linear-gradient(90deg, #2196f3 0%, #1de9b6 100%);

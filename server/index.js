@@ -24,6 +24,15 @@ const taskSchema = new mongoose.Schema({
         type: Boolean, 
         default: false // By default, a new task is not completed
     },
+    priority: {
+        type: String,
+        enum: ['normal', 'urgent'],
+        default: 'normal' // Priority level: normal (yellow), urgent (red)
+    },
+    dueDate: {
+        type: Date,
+        default: null // Optional due date for the task
+    },
     createdAt: { 
         type: Date, 
         default: Date.now // Automatically record when the task was created
@@ -41,7 +50,9 @@ const Task = mongoose.model('Task', taskSchema);
 app.post('/tasks', async (req, res) => {
     try {
         const newTask = new Task({
-            title: req.body.title
+            title: req.body.title,
+            priority: req.body.priority || 'normal',
+            dueDate: req.body.dueDate || null
         });
         
         const savedTask = await newTask.save(); // Save to MongoDB Atlas
@@ -62,7 +73,7 @@ app.get('/tasks', async (req, res) => {
     }
 });
 
-// Route to update a task's completion status
+// Route to update a task's completion status, title, priority, or due date
 app.patch('/tasks/:id', async (req, res) => {
     try {
         const updateData = {};
@@ -73,7 +84,19 @@ app.patch('/tasks/:id', async (req, res) => {
             updateData.completedAt = req.body.completed ? new Date() : null;
         }
         
-        const updatedTask = await Task.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        if (req.body.title !== undefined) {
+            updateData.title = req.body.title;
+        }
+        
+        if (req.body.priority !== undefined) {
+            updateData.priority = req.body.priority;
+        }
+        
+        if (req.body.dueDate !== undefined) {
+            updateData.dueDate = req.body.dueDate;
+        }
+        
+        const updatedTask = await Task.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
         
         if (!updatedTask) {
             return res.status(404).json({ message: "Task not found" });
