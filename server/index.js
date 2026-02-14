@@ -5,127 +5,360 @@ require('dotenv').config();
 
 const app = express();
 
-// Base settings
 app.use(cors());
-app.use(express.json()); // Enables the server to read JSON that is sent to it
+app.use(express.json());
 
-// Ccnnect MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ Connected to MongoDB Atlas!'))
     .catch(err => console.error('❌ Connection error:', err));
 
-// 1. Create a Schema (The template for a task)
-const taskSchema = new mongoose.Schema({
-    title: { 
+// Shopping Item Schema
+const shoppingItemSchema = new mongoose.Schema({
+    name: { 
         type: String, 
-        required: true // A task must have a title
+        required: true
     },
-    completed: { 
-        type: Boolean, 
-        default: false // By default, a new task is not completed
+    quantity: {
+        type: Number,
+        default: 1
     },
-    priority: {
+    category: {
         type: String,
-        enum: ['normal', 'urgent'],
-        default: 'normal' // Priority level: normal (yellow), urgent (red)
+        default: 'general'
     },
-    dueDate: {
-        type: Date,
-        default: null // Optional due date for the task
+    purchased: { 
+        type: Boolean, 
+        default: false
+    },
+    addedBy: {
+        type: String,
+        required: true
     },
     createdAt: { 
         type: Date, 
-        default: Date.now // Automatically record when the task was created
+        default: Date.now
     },
-    completedAt: { 
+    purchasedAt: { 
         type: Date, 
-        default: null // Timestamp for when the task was marked as completed
+        default: null
     }
 });
 
-// 2. Create a Model (The tool to interact with the "Tasks" collection)
-const Task = mongoose.model('Task', taskSchema);
+// Active Shopping List Schema
+const activeListSchema = new mongoose.Schema({
+    items: [shoppingItemSchema],
+    createdAt: { 
+        type: Date, 
+        default: Date.now
+    },
+    lastModified: {
+        type: Date,
+        default: Date.now
+    }
+});
 
-// Route to add a new task
-app.post('/tasks', async (req, res) => {
+// History Entry Schema
+const historyEntrySchema = new mongoose.Schema({
+    items: [shoppingItemSchema],
+    completedAt: { 
+        type: Date, 
+        default: Date.now
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Models
+const ActiveList = mongoose.model('ActiveList', activeListSchema);
+const HistoryEntry = mongoose.model('HistoryEntry', historyEntrySchema);
+
+// Initialize active list if it doesn't exist
+async function initializeActiveList() {
+    const count = await ActiveList.countDocuments();
+    if (count === 0) {
+        await ActiveList.create({ items: [] });
+    }
+}
+
+initializeActiveList();
+
+// Track recently archived items to prevent duplicates
+const recentlyArchived = new Map();
+
+// Helper function to archive individual items
+async function archiveIndividualItem(item) {
     try {
-        const newTask = new Task({
-            title: req.body.title,
-            priority: req.body.priority || 'normal',
-            dueDate: req.body.dueDate || null
+        // Use only item name as key (case-insensitive) to prevent duplicate names
+        const itemKey = item.name.toLowerCase();
+        const now = Date.now();
+
+        // Check if an item with this name was recently archived (within last 5 seconds)
+        if (recentlyArchived.has(itemKey)) {
+            const lastArchived = recentlyArchived.get(itemKey);
+            if (now - lastArchived < 5000) {
+                console.log('⚠️  Skipping duplicate archive for:', item.name, '(archived', Math.round((now - lastArchived) / 1000), 'seconds ago)');
+                return;
+            }
+        }
+
+        console.log('📦 Archiving item:', item.name);
+        // Create a history entry with just this one item
+        const historyEntry = await HistoryEntry.create({
+            items: [item],
+            completedAt: new Date()
         });
+        console.log('✅ Item archived successfully:', historyEntry._id);
+
+        // Mark as recently archived
+        recentlyArchived.set(itemKey, now);
+        console.log('🔐 Locked:', itemKey, 'for 5 seconds');
+
+        // Clean up old entries after 10 seconds
+        setTimeout(() => {
+            recentlyArchived.delete(itemKey);
+            console.log('🔓 Unlocked:', itemKey);
+        }, 10000);
+    } catch (err) {
+        console.error('❌ Error archiving item:', err);
+    }
+}
+
+// Get active shopping list
+app.get('/list/active', async (req, res) => {
+    try {
+        let list = await ActiveList.findOne();
+        if (!list) {
+            list = await ActiveList.create({ items: [] });
+        }
+        res.json(list);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Get history entries
+app.get('/list/history', async (req, res) => {
+    try {
+        const history = await HistoryEntry.find().sort({ completedAt: -1 });
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Add item to active list
+app.post('/list/active/items', async (req, res) => {
+    try {
+        const list = await ActiveList.findOne();
         
-        const savedTask = await newTask.save(); // Save to MongoDB Atlas
-        res.status(201).json(savedTask); // Send back the saved task with its ID
+        if (!list) {
+            return res.status(404).json({ message: "Active list not found" });
+        }
+        
+        const newItem = {
+            _id: new mongoose.Types.ObjectId(),
+            name: req.body.name,
+            quantity: req.body.quantity || 1,
+            category: req.body.category || 'general',
+            addedBy: req.body.addedBy,
+            purchased: false,
+            createdAt: new Date(),
+            purchasedAt: null
+        };
+        
+        list.items.push(newItem);
+        list.lastModified = new Date();
+        const updatedList = await list.save();
+        
+        res.status(201).json(updatedList);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 });
 
-// Route to get all tasks
-app.get('/tasks', async (req, res) => {
+// Update item in active list (or archive and delete when purchased)
+app.patch('/list/active/items/:itemId', async (req, res) => {
     try {
-        // Task.find() looks into your MongoDB collection and returns everything
-        const tasks = await Task.find(); 
-        res.json(tasks); // Send the array of tasks back to the user
+        const list = await ActiveList.findOne();
+
+        if (!list) {
+            return res.status(404).json({ message: "Active list not found" });
+        }
+
+        const item = list.items.id(req.params.itemId);
+
+        if (!item) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        if (req.body.name !== undefined) item.name = req.body.name;
+        if (req.body.quantity !== undefined) item.quantity = req.body.quantity;
+        if (req.body.category !== undefined) item.category = req.body.category;
+        if (req.body.purchased !== undefined) {
+            // If marking as purchased, archive it and remove from active list
+            if (req.body.purchased === true && !item.purchased) {
+                await archiveIndividualItem(item.toObject());
+                item.deleteOne();
+                list.lastModified = new Date();
+                const updatedList = await list.save();
+                return res.json(updatedList);
+            }
+            item.purchased = req.body.purchased;
+            item.purchasedAt = req.body.purchased ? new Date() : null;
+        }
+
+        list.lastModified = new Date();
+        const updatedList = await list.save();
+        res.json(updatedList);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// Route to update a task's completion status, title, priority, or due date
-app.patch('/tasks/:id', async (req, res) => {
+// Delete item from active list
+app.delete('/list/active/items/:itemId', async (req, res) => {
     try {
-        const updateData = {};
-        
-        if (req.body.completed !== undefined) {
-            updateData.completed = req.body.completed;
-            // Set completedAt timestamp when task is marked as completed
-            updateData.completedAt = req.body.completed ? new Date() : null;
+        const list = await ActiveList.findOne();
+
+        if (!list) {
+            return res.status(404).json({ message: "Active list not found" });
         }
-        
-        if (req.body.title !== undefined) {
-            updateData.title = req.body.title;
+
+        const item = list.items.id(req.params.itemId);
+
+        if (!item) {
+            return res.status(404).json({ message: "Item not found" });
         }
-        
-        if (req.body.priority !== undefined) {
-            updateData.priority = req.body.priority;
-        }
-        
-        if (req.body.dueDate !== undefined) {
-            updateData.dueDate = req.body.dueDate;
-        }
-        
-        const updatedTask = await Task.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
-        
-        if (!updatedTask) {
-            return res.status(404).json({ message: "Task not found" });
-        }
-        
-        res.json(updatedTask);
+
+        // Just delete without archiving
+        item.deleteOne();
+        list.lastModified = new Date();
+        const updatedList = await list.save();
+
+        res.json(updatedList);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// Route to delete a task by its ID
-app.delete('/tasks/:id', async (req, res) => {
+// Copy items from history entry to active list
+app.post('/list/copy-from-history/:historyId', async (req, res) => {
     try {
-        const deletedTask = await Task.findByIdAndDelete(req.params.id);
+        const activeList = await ActiveList.findOne();
+        const historyEntry = await HistoryEntry.findById(req.params.historyId);
         
-        if (!deletedTask) {
-            return res.status(404).json({ message: "Task not found" });
+        if (!activeList) {
+            return res.status(404).json({ message: "Active list not found" });
         }
         
-        res.json({ message: "Task deleted successfully" });
+        if (!historyEntry) {
+            return res.status(404).json({ message: "History entry not found" });
+        }
+        
+        historyEntry.items.forEach(item => {
+            const copiedItem = {
+                _id: new mongoose.Types.ObjectId(),
+                name: item.name,
+                quantity: item.quantity,
+                category: item.category,
+                addedBy: 'imported',
+                purchased: false,
+                createdAt: new Date(),
+                purchasedAt: null
+            };
+            activeList.items.push(copiedItem);
+        });
+        
+        activeList.lastModified = new Date();
+        const updatedList = await activeList.save();
+        res.json(updatedList);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// Check the server is up
+// Archive active list (move to history)
+app.post('/list/archive', async (req, res) => {
+    try {
+        const activeList = await ActiveList.findOne();
+        
+        if (!activeList || activeList.items.length === 0) {
+            return res.status(400).json({ message: "Nothing to archive" });
+        }
+        
+        // Create history entry
+        await HistoryEntry.create({
+            items: activeList.items,
+            completedAt: new Date()
+        });
+        
+        // Clear active list
+        activeList.items = [];
+        activeList.lastModified = new Date();
+        await activeList.save();
+        
+        res.json({ message: "List archived successfully" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Clear active list
+app.post('/list/clear', async (req, res) => {
+    try {
+        const activeList = await ActiveList.findOne();
+        activeList.items = [];
+        activeList.lastModified = new Date();
+        const updatedList = await activeList.save();
+        res.json(updatedList);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Delete a specific history entry
+app.delete('/list/history/:historyId', async (req, res) => {
+    try {
+        await HistoryEntry.findByIdAndDelete(req.params.historyId);
+        const history = await HistoryEntry.find().sort({ completedAt: -1 });
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Delete a specific item from a history entry
+app.delete('/list/history/:historyId/items/:itemId', async (req, res) => {
+    try {
+        const historyEntry = await HistoryEntry.findById(req.params.historyId);
+        if (!historyEntry) {
+            return res.status(404).json({ message: "History entry not found" });
+        }
+        
+        historyEntry.items.id(req.params.itemId).deleteOne();
+        const updated = await historyEntry.save();
+        
+        const history = await HistoryEntry.find().sort({ completedAt: -1 });
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Clear all history
+app.delete('/list/history', async (req, res) => {
+    try {
+        await HistoryEntry.deleteMany({});
+        res.json({ message: "All history cleared" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 app.get('/', (req, res) => {
-    res.send('Server is up and running!');
+    res.send('Perry Shopping Cart Server is running!');
 });
 
 const PORT = 5000;
