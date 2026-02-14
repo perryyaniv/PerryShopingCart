@@ -38,14 +38,14 @@ export default function ConnectionIndicator({ status, darkMode, serverUrl }) {
       ></div>
 
       {/* Tooltip */}
-      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 ${
+      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap max-w-[90vw] ${
         darkMode
           ? 'bg-slate-800 text-white border border-slate-700'
           : 'bg-gray-900 text-white'
       }`}>
         <div className="font-semibold">{config.text}</div>
         {serverUrl && (
-          <div className={`text-xs mt-1 ${darkMode ? 'text-slate-400' : 'text-gray-300'}`}>
+          <div className={`text-xs mt-1 truncate max-w-[250px] ${darkMode ? 'text-slate-400' : 'text-gray-300'}`}>
             {serverUrl}
           </div>
         )}

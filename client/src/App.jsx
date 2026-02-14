@@ -383,12 +383,12 @@ function App() {
         <div className={`min-h-screen transition-colors duration-300 flex items-center justify-center ${
           darkMode ? 'bg-slate-950' : 'bg-gray-50'
         }`}>
-          <div className={`w-full max-w-md p-8 rounded-xl border transition-colors duration-300 ${
+          <div className={`w-full max-w-md mx-4 p-6 md:p-8 rounded-xl border transition-colors duration-300 ${
             darkMode
               ? 'bg-slate-900 border-slate-800'
               : 'bg-white border-gray-200'
           }`}>
-            <h1 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className={`text-2xl md:text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Perry Shopping Cart
             </h1>
             <p className={`mb-6 text-sm ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
@@ -460,7 +460,7 @@ function App() {
 
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`absolute top-6 right-6 p-2.5 rounded-lg transition-all duration-300 ${
+              className={`absolute top-4 right-4 md:top-6 md:right-6 p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
                 darkMode
                   ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -479,35 +479,35 @@ function App() {
       <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-gray-50'}`}>
         {/* Demonic Message Overlay */}
         {showDemonicMessage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn"
+          <div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn px-4"
                style={{
                  background: 'radial-gradient(circle, rgba(139,0,0,0.95) 0%, rgba(0,0,0,0.98) 100%)',
                  animation: 'fadeInOut 5s ease-in-out'
                }}>
-            <div className="text-center">
-              <div className="text-7xl mb-6 animate-bounce">
+            <div className="text-center max-w-full">
+              <div className="text-5xl md:text-7xl mb-4 md:mb-6 animate-bounce">
                 👹
               </div>
-              <div className="flex justify-center gap-6 mb-6">
-                <span className="text-5xl animate-pulse">🔥</span>
-                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.2s' }}>🔥</span>
-                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.4s' }}>🔥</span>
+              <div className="flex justify-center gap-3 md:gap-6 mb-4 md:mb-6">
+                <span className="text-3xl md:text-5xl animate-pulse">🔥</span>
+                <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.2s' }}>🔥</span>
+                <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.4s' }}>🔥</span>
               </div>
-              <h1 className="text-6xl md:text-8xl font-black mb-6 px-4"
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-black mb-4 md:mb-6 px-4"
                   style={{
                     color: '#ff3333',
-                    WebkitTextStroke: '2px #000000',
-                    textShadow: '0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 90px #ff4500, 0 4px 8px rgba(0,0,0,0.8)',
+                    WebkitTextStroke: '1px #000000',
+                    textShadow: '0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 60px #ff4500, 0 4px 8px rgba(0,0,0,0.8)',
                     animation: 'glow 1.5s ease-in-out infinite alternate',
                     letterSpacing: '0.05em',
                     lineHeight: '1.2'
                   }}>
                 NO REST FOR THE WICKED!
               </h1>
-              <div className="flex justify-center gap-6 mt-6">
-                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.1s' }}>🔥</span>
-                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.3s' }}>🔥</span>
-                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.5s' }}>🔥</span>
+              <div className="flex justify-center gap-3 md:gap-6 mt-4 md:mt-6">
+                <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.1s' }}>🔥</span>
+                <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.3s' }}>🔥</span>
+                <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.5s' }}>🔥</span>
               </div>
             </div>
           </div>
@@ -519,71 +519,73 @@ function App() {
             ? 'bg-slate-900/95 backdrop-blur border-slate-800'
             : 'bg-white/95 backdrop-blur border-gray-200'
         }`}>
-          <div className="max-w-4xl mx-auto px-6 py-5 flex justify-between items-center">
-            <div>
-              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Perry Shopping Cart</h1>
-              <p className={`text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                Welcome, {currentUser}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <ConnectionIndicator status={connectionStatus} darkMode={darkMode} serverUrl={API_BASE_URL} />
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className={`p-2.5 rounded-lg transition-all duration-300 ${
-                  darkMode
-                    ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {darkMode ? '☀️' : '🌙'}
-              </button>
-              <button
-                onClick={handleLogout}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
-                  darkMode
-                    ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
-                    : 'bg-red-100 text-red-600 hover:bg-red-200'
-                }`}
-              >
-                Logout
-              </button>
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-5">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex-1">
+                <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Perry Shopping Cart</h1>
+                <p className={`text-xs md:text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  Welcome, {currentUser}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <ConnectionIndicator status={connectionStatus} darkMode={darkMode} serverUrl={API_BASE_URL} />
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
+                    darkMode
+                      ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {darkMode ? '☀️' : '🌙'}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
+                    darkMode
+                      ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
+                      : 'bg-red-100 text-red-600 hover:bg-red-200'
+                  }`}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
           {/* Stats Card */}
-          <div className={`mb-8 p-6 rounded-xl transition-colors duration-300 border ${
+          <div className={`mb-6 md:mb-8 p-4 md:p-6 rounded-xl transition-colors duration-300 border ${
             darkMode
               ? 'bg-slate-900 border-slate-800'
               : 'bg-white border-gray-200'
           }`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+                <p className={`text-xs md:text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
                   Items to Buy
                 </p>
-                <p className={`text-3xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                <p className={`text-2xl md:text-3xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   {pendingCount}
                 </p>
               </div>
-              <div className={`text-4xl ${pendingCount === 0 ? 'opacity-100' : 'opacity-50'}`}>
+              <div className={`text-3xl md:text-4xl ${pendingCount === 0 ? 'opacity-100' : 'opacity-50'}`}>
                 {pendingCount === 0 ? '✓' : '→'}
               </div>
             </div>
           </div>
 
           {/* Add Item Section */}
-          <div className={`mb-8 p-6 rounded-xl transition-colors duration-300 border ${
+          <div className={`mb-6 md:mb-8 p-4 md:p-6 rounded-xl transition-colors duration-300 border ${
             darkMode
               ? 'bg-slate-900 border-slate-800'
               : 'bg-white border-gray-200'
           }`}>
-            <h2 className={`text-sm font-semibold mb-4 ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+            <h2 className={`text-xs md:text-sm font-semibold mb-3 md:mb-4 ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
               Add New Item
             </h2>
-            <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 md:gap-3 items-stretch sm:items-end">
               <div className="flex-1 min-w-[150px]">
                 <input
                   type="text"
@@ -591,7 +593,7 @@ function App() {
                   onChange={(e) => setItemName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !itemExists && addItem()}
                   placeholder="Item name"
-                  className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm ${
                     itemExists
                       ? darkMode
                         ? 'bg-slate-800 border-red-500 text-white placeholder-slate-500'
@@ -610,41 +612,43 @@ function App() {
                 )}
               </div>
 
-              <input
-                type="number"
-                value={itemQuantity}
-                onChange={(e) => setItemQuantity(e.target.value)}
-                min="1"
-                placeholder="Qty"
-                className={`w-20 px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
-                  darkMode
-                    ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
-                } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
-              />
+              <div className="flex gap-2 sm:gap-3">
+                <input
+                  type="number"
+                  value={itemQuantity}
+                  onChange={(e) => setItemQuantity(e.target.value)}
+                  min="1"
+                  placeholder="Qty"
+                  className={`w-16 sm:w-20 px-2 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                />
 
-              <select
-                value={itemCategory}
-                onChange={(e) => setItemCategory(e.target.value)}
-                className={`px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
-                  darkMode
-                    ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
-                    : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
-                } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
-              >
-                <option value="General">General</option>
-                <option value="Fruits & Vegetables">Fruits & Vegetables</option>
-                <option value="Bakery">Bakery</option>
-                <option value="Dairy">Dairy</option>
-                <option value="Meat">Meat</option>
-                <option value="Frozen">Frozen</option>
-                <option value="Pantry">Pantry</option>
-              </select>
+                <select
+                  value={itemCategory}
+                  onChange={(e) => setItemCategory(e.target.value)}
+                  className={`flex-1 px-2 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-xs md:text-sm ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                >
+                  <option value="General">General</option>
+                  <option value="Fruits & Vegetables">Fruits & Veg</option>
+                  <option value="Bakery">Bakery</option>
+                  <option value="Dairy">Dairy</option>
+                  <option value="Meat">Meat</option>
+                  <option value="Frozen">Frozen</option>
+                  <option value="Pantry">Pantry</option>
+                </select>
+              </div>
 
               <button
                 onClick={addItem}
                 disabled={itemExists}
-                className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
+                className={`w-full sm:w-auto px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
                   itemExists
                     ? darkMode
                       ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -660,16 +664,16 @@ function App() {
           </div>
 
           {/* Search and Filter */}
-          <div className={`mb-8 p-6 rounded-xl transition-colors duration-300 border ${
+          <div className={`mb-6 md:mb-8 p-4 md:p-6 rounded-xl transition-colors duration-300 border ${
             darkMode
               ? 'bg-slate-900 border-slate-800'
               : 'bg-white border-gray-200'
           }`}>
             {/* Tabs */}
-            <div className="flex gap-2 mb-6 border-b border-gray-300 dark:border-slate-700">
+            <div className="flex gap-1 md:gap-2 mb-4 md:mb-6 border-b border-gray-300 dark:border-slate-700">
               <button
                 onClick={() => setActiveTab('active')}
-                className={`px-6 py-3 font-semibold text-sm transition-all duration-300 border-b-2 ${
+                className={`flex-1 px-3 md:px-6 py-2 md:py-3 font-semibold text-xs md:text-sm transition-all duration-300 border-b-2 ${
                   activeTab === 'active'
                     ? darkMode
                       ? 'border-blue-500 text-blue-400'
@@ -683,7 +687,7 @@ function App() {
               </button>
               <button
                 onClick={() => setActiveTab('history')}
-                className={`px-6 py-3 font-semibold text-sm transition-all duration-300 border-b-2 ${
+                className={`flex-1 px-3 md:px-6 py-2 md:py-3 font-semibold text-xs md:text-sm transition-all duration-300 border-b-2 ${
                   activeTab === 'history'
                     ? darkMode
                       ? 'border-blue-500 text-blue-400'
@@ -705,17 +709,17 @@ function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search items..."
-                  className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm mb-4 ${
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm mb-3 md:mb-4 ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
                       : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
                   } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
                 />
 
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   <button
                     onClick={() => archiveList()}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                    className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
                       darkMode
                         ? 'bg-green-900/20 text-green-400 hover:bg-green-900/30'
                         : 'bg-green-100 text-green-600 hover:bg-green-200'
@@ -726,7 +730,7 @@ function App() {
 
                   <button
                     onClick={() => clearList()}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                    className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
                       darkMode
                         ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
                         : 'bg-red-100 text-red-600 hover:bg-red-200'
@@ -741,19 +745,19 @@ function App() {
 
           {/* History Tab Content */}
           {activeTab === 'history' && (
-            <div className={`mb-8 p-6 rounded-xl transition-colors duration-300 border ${
+            <div className={`mb-6 md:mb-8 p-4 md:p-6 rounded-xl transition-colors duration-300 border ${
               darkMode
                 ? 'bg-slate-900 border-slate-800'
                 : 'bg-white border-gray-200'
             }`}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   Archived Items
                 </h2>
                 {historyList.length > 0 && (
                   <button
                     onClick={clearAllHistory}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                    className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
                       darkMode
                         ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
                         : 'bg-red-100 text-red-600 hover:bg-red-200'
@@ -802,14 +806,14 @@ function App() {
                       return (
                         <div
                           key={`${item.entryId}-${item._id}`}
-                          className={`p-3 rounded-lg border flex items-center justify-between group ${
+                          className={`p-3 md:p-3 rounded-lg border flex flex-col sm:flex-row items-start sm:items-center gap-3 group ${
                             darkMode
                               ? 'bg-slate-800 border-slate-700 hover:border-blue-500'
                               : 'bg-gray-50 border-gray-200 hover:border-blue-400'
                           } transition-all`}
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                          <div className="flex-1 w-full sm:w-auto">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className={`font-medium text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                 {item.name}
                               </p>
@@ -823,22 +827,22 @@ function App() {
                                 </span>
                               )}
                             </div>
-                            <div className="flex flex-wrap gap-2 mt-1 text-xs">
-                              <span className={`px-2 py-1 rounded ${
+                            <div className="flex flex-wrap gap-1.5 md:gap-2 mt-1.5 md:mt-1 text-xs">
+                              <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded ${
                                 darkMode
                                   ? 'bg-blue-900/30 text-blue-300'
                                   : 'bg-blue-100 text-blue-700'
                               }`}>
                                 Qty: {item.quantity}
                               </span>
-                              <span className={`px-2 py-1 rounded ${
+                              <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded ${
                                 darkMode
                                   ? 'bg-slate-700 text-slate-300'
                                   : 'bg-gray-200 text-gray-700'
                               }`}>
                                 {item.category}
                               </span>
-                              <span className={`px-2 py-1 rounded text-xs ${
+                              <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs ${
                                 darkMode
                                   ? 'bg-slate-700 text-slate-400'
                                   : 'bg-gray-300 text-gray-600'
@@ -850,11 +854,11 @@ function App() {
                               </span>
                             </div>
                           </div>
-                          <div className="flex gap-2 ml-3">
+                          <div className="flex gap-2 w-full sm:w-auto">
                             <button
                               onClick={() => addItemFromHistory(item)}
                               disabled={existsInActiveList}
-                              className={`px-3 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all duration-300 ${
+                              className={`flex-1 sm:flex-none px-3 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all duration-300 ${
                                 existsInActiveList
                                   ? darkMode
                                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -868,7 +872,7 @@ function App() {
                             </button>
                             <button
                               onClick={() => deleteHistoryItem(item.entryId, item._id)}
-                              className={`px-2 py-2 rounded-lg font-medium text-xs transition-all duration-300 ${
+                              className={`px-3 sm:px-2 py-2 rounded-lg font-medium text-xs transition-all duration-300 ${
                                 darkMode
                                   ? 'text-red-400 hover:bg-red-900/20'
                                   : 'text-red-600 hover:bg-red-100'
@@ -888,19 +892,19 @@ function App() {
 
           {/* Shopping List - Only show on Active Tab */}
           {activeTab === 'active' && (filteredItems.length === 0 ? (
-            <div className={`text-center py-16 rounded-xl border ${
+            <div className={`text-center py-12 md:py-16 rounded-xl border ${
               darkMode
                 ? 'bg-slate-900 border-slate-800'
                 : 'bg-white border-gray-200'
             }`}>
-              <p className={`text-base font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+              <p className={`text-sm md:text-base font-medium px-4 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                 {searchQuery
                   ? 'No items match your criteria'
                   : 'No items yet. Add one to get started'}
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {(() => {
                 const itemsByCategory = getItemsByCategory()
                 return categoryOrder.map((category, categoryIndex) => {
@@ -920,23 +924,23 @@ function App() {
                     >
                       {/* Category Header */}
                       <div
-                        className={`flex items-center justify-between p-4 border-b ${
+                        className={`flex items-center justify-between p-3 md:p-4 border-b ${
                           darkMode ? 'border-slate-800' : 'border-gray-200'
                         }`}
                       >
-                        <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                           <button
                             onClick={() => toggleCategoryCollapse(category)}
-                            className={`text-lg transition-transform duration-200 ${
+                            className={`text-base md:text-lg transition-transform duration-200 flex-shrink-0 ${
                               isCollapsed ? 'rotate-0' : 'rotate-90'
                             }`}
                           >
                             ▶
                           </button>
-                          <h3 className={`text-base font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          <h3 className={`text-sm md:text-base font-semibold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                             {category}
                           </h3>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
+                          <span className={`text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded-full flex-shrink-0 ${
                             darkMode
                               ? 'bg-slate-800 text-slate-400'
                               : 'bg-gray-100 text-gray-600'
@@ -944,11 +948,11 @@ function App() {
                             {items.length}
                           </span>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex gap-0.5 md:gap-1 flex-shrink-0">
                           <button
                             onClick={() => moveCategoryUp(categoryIndex)}
                             disabled={categoryIndex === 0}
-                            className={`p-1.5 rounded transition-all ${
+                            className={`p-1 md:p-1.5 rounded transition-all text-xs md:text-base ${
                               categoryIndex === 0
                                 ? darkMode
                                   ? 'text-slate-700 cursor-not-allowed'
@@ -963,7 +967,7 @@ function App() {
                           <button
                             onClick={() => moveCategoryDown(categoryIndex)}
                             disabled={categoryIndex === categoryOrder.length - 1}
-                            className={`p-1.5 rounded transition-all ${
+                            className={`p-1 md:p-1.5 rounded transition-all text-xs md:text-base ${
                               categoryIndex === categoryOrder.length - 1
                                 ? darkMode
                                   ? 'text-slate-700 cursor-not-allowed'
@@ -980,11 +984,11 @@ function App() {
 
                       {/* Category Items */}
                       {!isCollapsed && (
-                        <ul className="p-3 space-y-2">
+                        <ul className="p-2 md:p-3 space-y-2">
                           {items.map(item => (
                             <li
                               key={item._id}
-                              className={`group p-4 rounded-lg transition-all duration-300 border flex items-start gap-4 ${
+                              className={`group p-3 md:p-4 rounded-lg transition-all duration-300 border flex items-start gap-2 md:gap-4 ${
                                 darkMode
                                   ? `${
                                       item.purchased
@@ -1003,14 +1007,14 @@ function App() {
                                 checked={item.purchased}
                                 onChange={() => togglePurchased(item._id)}
                                 disabled={processingItems.has(item._id)}
-                                className={`mt-1.5 w-5 h-5 rounded border-gray-300 accent-blue-600 flex-shrink-0 ${
+                                className={`mt-0.5 md:mt-1.5 w-5 h-5 md:w-5 md:h-5 rounded border-gray-300 accent-blue-600 flex-shrink-0 ${
                                   processingItems.has(item._id) ? 'cursor-wait opacity-50' : 'cursor-pointer'
                                 }`}
                               />
 
                               <div className="flex-1 min-w-0">
                                 <div
-                                  className={`text-sm font-medium transition-all duration-300 break-words ${
+                                  className={`text-xs md:text-sm font-medium transition-all duration-300 break-words ${
                                     item.purchased
                                       ? darkMode
                                         ? 'text-slate-500 line-through'
@@ -1023,7 +1027,7 @@ function App() {
                                   {item.name}
                                 </div>
 
-                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                                <div className="flex flex-wrap gap-1.5 md:gap-2 mt-1.5 md:mt-2 text-xs">
                                   {editingQuantity === item._id ? (
                                     <div className="flex items-center gap-1">
                                       <input
@@ -1039,7 +1043,7 @@ function App() {
                                         }}
                                         min="1"
                                         autoFocus
-                                        className={`w-16 px-2 py-1 rounded border text-xs ${
+                                        className={`w-14 md:w-16 px-1.5 md:px-2 py-1 rounded border text-xs ${
                                           darkMode
                                             ? 'bg-slate-900 border-blue-500 text-white'
                                             : 'bg-white border-blue-500 text-gray-900'
@@ -1047,7 +1051,7 @@ function App() {
                                       />
                                       <button
                                         onClick={() => updateQuantity(item._id)}
-                                        className={`px-2 py-1 rounded font-medium ${
+                                        className={`px-2 py-1 rounded font-medium text-xs ${
                                           darkMode
                                             ? 'bg-green-600 hover:bg-green-500 text-white'
                                             : 'bg-green-600 hover:bg-green-700 text-white'
@@ -1057,7 +1061,7 @@ function App() {
                                       </button>
                                       <button
                                         onClick={cancelEditingQuantity}
-                                        className={`px-2 py-1 rounded font-medium ${
+                                        className={`px-2 py-1 rounded font-medium text-xs ${
                                           darkMode
                                             ? 'bg-red-600 hover:bg-red-500 text-white'
                                             : 'bg-red-600 hover:bg-red-700 text-white'
@@ -1069,7 +1073,7 @@ function App() {
                                   ) : (
                                     <button
                                       onClick={() => startEditingQuantity(item._id, item.quantity)}
-                                      className={`px-2.5 py-1 rounded-full font-medium transition-all ${
+                                      className={`px-2 md:px-2.5 py-0.5 md:py-1 rounded-full font-medium transition-all text-xs ${
                                         darkMode
                                           ? 'bg-blue-900/30 text-blue-300 hover:bg-blue-900/50'
                                           : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -1083,7 +1087,7 @@ function App() {
 
                               <button
                                 onClick={() => deleteItem(item._id)}
-                                className={`flex-shrink-0 p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                                className={`flex-shrink-0 p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
                                   darkMode
                                     ? 'text-red-400 hover:bg-red-900/20'
                                     : 'text-red-600 hover:bg-red-100'
