@@ -16,6 +16,7 @@ function App() {
   const [pastUsers, setPastUsers] = useState([])
   const [processingItems, setProcessingItems] = useState(new Set())
   const processingRef = useRef(new Set())
+  const [showDemonicMessage, setShowDemonicMessage] = useState(false)
 
   // Fetch active list and past users on mount
   useEffect(() => {
@@ -55,7 +56,13 @@ function App() {
       const trimmedName = userName.trim()
       setCurrentUser(trimmedName)
       setUserName('')
-      
+
+      // Show demonic message
+      setShowDemonicMessage(true)
+      setTimeout(() => {
+        setShowDemonicMessage(false)
+      }, 5000)
+
       // Save to past users if not already there
       if (!pastUsers.includes(trimmedName)) {
         const updated = [trimmedName, ...pastUsers]
@@ -368,6 +375,42 @@ function App() {
   return (
     <div className={darkMode ? 'dark' : ''}>
       <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-gray-50'}`}>
+        {/* Demonic Message Overlay */}
+        {showDemonicMessage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn"
+               style={{
+                 background: 'radial-gradient(circle, rgba(139,0,0,0.95) 0%, rgba(0,0,0,0.98) 100%)',
+                 animation: 'fadeInOut 5s ease-in-out'
+               }}>
+            <div className="text-center">
+              <div className="text-7xl mb-6 animate-bounce">
+                👹
+              </div>
+              <div className="flex justify-center gap-6 mb-6">
+                <span className="text-5xl animate-pulse">🔥</span>
+                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.2s' }}>🔥</span>
+                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.4s' }}>🔥</span>
+              </div>
+              <h1 className="text-6xl md:text-8xl font-black mb-6 px-4"
+                  style={{
+                    color: '#ff3333',
+                    WebkitTextStroke: '2px #000000',
+                    textShadow: '0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 90px #ff4500, 0 4px 8px rgba(0,0,0,0.8)',
+                    animation: 'glow 1.5s ease-in-out infinite alternate',
+                    letterSpacing: '0.05em',
+                    lineHeight: '1.2'
+                  }}>
+                NO REST FOR THE WICKED!
+              </h1>
+              <div className="flex justify-center gap-6 mt-6">
+                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.1s' }}>🔥</span>
+                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.3s' }}>🔥</span>
+                <span className="text-5xl animate-pulse" style={{ animationDelay: '0.5s' }}>🔥</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className={`sticky top-0 z-10 border-b transition-colors duration-300 ${
           darkMode
