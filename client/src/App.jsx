@@ -24,6 +24,16 @@ function App() {
   const connectionStatus = useConnectionStatus(API_BASE_URL)
   const [editingQuantity, setEditingQuantity] = useState(null)
   const [editQuantityValue, setEditQuantityValue] = useState('')
+  const [collapsedCategories, setCollapsedCategories] = useState(new Set())
+  const [categoryOrder, setCategoryOrder] = useState([
+    'General',
+    'Fruits & Vegetables',
+    'Bakery',
+    'Dairy',
+    'Meat',
+    'Frozen',
+    'Pantry'
+  ])
 
   // Fetch active list and past users on mount
   useEffect(() => {
@@ -37,6 +47,12 @@ function App() {
       if (users.length > 0 && !userName) {
         setUserName(users[0])
       }
+    }
+
+    // Load category order from localStorage
+    const savedCategoryOrder = localStorage.getItem('categoryOrder')
+    if (savedCategoryOrder) {
+      setCategoryOrder(JSON.parse(savedCategoryOrder))
     }
   }, [])
 
@@ -192,6 +208,56 @@ function App() {
     } catch (error) {
       console.error('Error updating quantity:', error)
     }
+  }
+
+  const toggleCategoryCollapse = (category) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev)
+      if (next.has(category)) {
+        next.delete(category)
+      } else {
+        next.add(category)
+      }
+      return next
+    })
+  }
+
+  const moveCategoryUp = (index) => {
+    if (index === 0) return
+    const newOrder = [...categoryOrder]
+    ;[newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]]
+    setCategoryOrder(newOrder)
+    localStorage.setItem('categoryOrder', JSON.stringify(newOrder))
+  }
+
+  const moveCategoryDown = (index) => {
+    if (index === categoryOrder.length - 1) return
+    const newOrder = [...categoryOrder]
+    ;[newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]]
+    setCategoryOrder(newOrder)
+    localStorage.setItem('categoryOrder', JSON.stringify(newOrder))
+  }
+
+  const getItemsByCategory = () => {
+    const filtered = getFilteredItems()
+    const grouped = {}
+
+    // Initialize all categories
+    categoryOrder.forEach(category => {
+      grouped[category] = []
+    })
+
+    // Group items by category
+    filtered.forEach(item => {
+      if (grouped[item.category]) {
+        grouped[item.category].push(item)
+      } else {
+        // If category doesn't exist in order, add to General
+        grouped['General'].push(item)
+      }
+    })
+
+    return grouped
   }
 
   const copyFromHistory = async (historyId) => {
@@ -834,129 +900,206 @@ function App() {
               </p>
             </div>
           ) : (
-            <ul className="space-y-3">
-              {filteredItems.map(item => (
-                <li
-                  key={item._id}
-                  className={`group p-4 rounded-lg transition-all duration-300 border flex items-start gap-4 ${
-                    darkMode
-                      ? `${
-                          item.purchased
-                            ? 'bg-slate-900/50 border-slate-700'
-                            : 'bg-slate-900 border-slate-800 hover:border-blue-500/50'
-                        }`
-                      : `${
-                          item.purchased
-                            ? 'bg-gray-50 border-gray-200'
-                            : 'bg-white border-gray-200 hover:border-blue-400'
-                        }`
-                  } hover:shadow-sm`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.purchased}
-                    onChange={() => togglePurchased(item._id)}
-                    disabled={processingItems.has(item._id)}
-                    className={`mt-1.5 w-5 h-5 rounded border-gray-300 accent-blue-600 flex-shrink-0 ${
-                      processingItems.has(item._id) ? 'cursor-wait opacity-50' : 'cursor-pointer'
-                    }`}
-                  />
+            <div className="space-y-4">
+              {(() => {
+                const itemsByCategory = getItemsByCategory()
+                return categoryOrder.map((category, categoryIndex) => {
+                  const items = itemsByCategory[category] || []
+                  if (items.length === 0) return null
 
-                  <div className="flex-1 min-w-0">
+                  const isCollapsed = collapsedCategories.has(category)
+
+                  return (
                     <div
-                      className={`text-sm font-medium transition-all duration-300 break-words ${
-                        item.purchased
-                          ? darkMode
-                            ? 'text-slate-500 line-through'
-                            : 'text-gray-400 line-through'
-                          : darkMode
-                            ? 'text-white'
-                            : 'text-gray-900'
+                      key={category}
+                      className={`rounded-xl border transition-all duration-300 ${
+                        darkMode
+                          ? 'bg-slate-900 border-slate-800'
+                          : 'bg-white border-gray-200'
                       }`}
                     >
-                      {item.name}
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mt-2 text-xs">
-                      {editingQuantity === item._id ? (
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            value={editQuantityValue}
-                            onChange={(e) => setEditQuantityValue(e.target.value)}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                updateQuantity(item._id)
-                              } else if (e.key === 'Escape') {
-                                cancelEditingQuantity()
-                              }
-                            }}
-                            min="1"
-                            autoFocus
-                            className={`w-16 px-2 py-1 rounded border text-xs ${
-                              darkMode
-                                ? 'bg-slate-800 border-blue-500 text-white'
-                                : 'bg-white border-blue-500 text-gray-900'
-                            } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
-                          />
-                          <button
-                            onClick={() => updateQuantity(item._id)}
-                            className={`px-2 py-1 rounded font-medium ${
-                              darkMode
-                                ? 'bg-green-600 hover:bg-green-500 text-white'
-                                : 'bg-green-600 hover:bg-green-700 text-white'
-                            }`}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            onClick={cancelEditingQuantity}
-                            className={`px-2 py-1 rounded font-medium ${
-                              darkMode
-                                ? 'bg-red-600 hover:bg-red-500 text-white'
-                                : 'bg-red-600 hover:bg-red-700 text-white'
-                            }`}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => startEditingQuantity(item._id, item.quantity)}
-                          className={`px-2.5 py-1 rounded-full font-medium transition-all ${
-                            darkMode
-                              ? 'bg-blue-900/30 text-blue-300 hover:bg-blue-900/50'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                          }`}
-                        >
-                          Qty: {item.quantity}
-                        </button>
-                      )}
-                      <span
-                        className={`px-2.5 py-1 rounded-full font-medium ${
-                          darkMode
-                            ? 'bg-slate-800 text-slate-300'
-                            : 'bg-gray-200 text-gray-700'
+                      {/* Category Header */}
+                      <div
+                        className={`flex items-center justify-between p-4 border-b ${
+                          darkMode ? 'border-slate-800' : 'border-gray-200'
                         }`}
                       >
-                        {item.category}
-                      </span>
-                    </div>
-                  </div>
+                        <div className="flex items-center gap-3 flex-1">
+                          <button
+                            onClick={() => toggleCategoryCollapse(category)}
+                            className={`text-lg transition-transform duration-200 ${
+                              isCollapsed ? 'rotate-0' : 'rotate-90'
+                            }`}
+                          >
+                            ▶
+                          </button>
+                          <h3 className={`text-base font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {category}
+                          </h3>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            darkMode
+                              ? 'bg-slate-800 text-slate-400'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {items.length}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => moveCategoryUp(categoryIndex)}
+                            disabled={categoryIndex === 0}
+                            className={`p-1.5 rounded transition-all ${
+                              categoryIndex === 0
+                                ? darkMode
+                                  ? 'text-slate-700 cursor-not-allowed'
+                                  : 'text-gray-300 cursor-not-allowed'
+                                : darkMode
+                                  ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            }`}
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => moveCategoryDown(categoryIndex)}
+                            disabled={categoryIndex === categoryOrder.length - 1}
+                            className={`p-1.5 rounded transition-all ${
+                              categoryIndex === categoryOrder.length - 1
+                                ? darkMode
+                                  ? 'text-slate-700 cursor-not-allowed'
+                                  : 'text-gray-300 cursor-not-allowed'
+                                : darkMode
+                                  ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            }`}
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </div>
 
-                  <button
-                    onClick={() => deleteItem(item._id)}
-                    className={`flex-shrink-0 p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
-                      darkMode
-                        ? 'text-red-400 hover:bg-red-900/20'
-                        : 'text-red-600 hover:bg-red-100'
-                    }`}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
+                      {/* Category Items */}
+                      {!isCollapsed && (
+                        <ul className="p-3 space-y-2">
+                          {items.map(item => (
+                            <li
+                              key={item._id}
+                              className={`group p-4 rounded-lg transition-all duration-300 border flex items-start gap-4 ${
+                                darkMode
+                                  ? `${
+                                      item.purchased
+                                        ? 'bg-slate-900/50 border-slate-700'
+                                        : 'bg-slate-800 border-slate-700 hover:border-blue-500/50'
+                                    }`
+                                  : `${
+                                      item.purchased
+                                        ? 'bg-gray-50 border-gray-200'
+                                        : 'bg-gray-50 border-gray-200 hover:border-blue-400'
+                                    }`
+                              } hover:shadow-sm`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={item.purchased}
+                                onChange={() => togglePurchased(item._id)}
+                                disabled={processingItems.has(item._id)}
+                                className={`mt-1.5 w-5 h-5 rounded border-gray-300 accent-blue-600 flex-shrink-0 ${
+                                  processingItems.has(item._id) ? 'cursor-wait opacity-50' : 'cursor-pointer'
+                                }`}
+                              />
+
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className={`text-sm font-medium transition-all duration-300 break-words ${
+                                    item.purchased
+                                      ? darkMode
+                                        ? 'text-slate-500 line-through'
+                                        : 'text-gray-400 line-through'
+                                      : darkMode
+                                        ? 'text-white'
+                                        : 'text-gray-900'
+                                  }`}
+                                >
+                                  {item.name}
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                                  {editingQuantity === item._id ? (
+                                    <div className="flex items-center gap-1">
+                                      <input
+                                        type="number"
+                                        value={editQuantityValue}
+                                        onChange={(e) => setEditQuantityValue(e.target.value)}
+                                        onKeyPress={(e) => {
+                                          if (e.key === 'Enter') {
+                                            updateQuantity(item._id)
+                                          } else if (e.key === 'Escape') {
+                                            cancelEditingQuantity()
+                                          }
+                                        }}
+                                        min="1"
+                                        autoFocus
+                                        className={`w-16 px-2 py-1 rounded border text-xs ${
+                                          darkMode
+                                            ? 'bg-slate-900 border-blue-500 text-white'
+                                            : 'bg-white border-blue-500 text-gray-900'
+                                        } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+                                      />
+                                      <button
+                                        onClick={() => updateQuantity(item._id)}
+                                        className={`px-2 py-1 rounded font-medium ${
+                                          darkMode
+                                            ? 'bg-green-600 hover:bg-green-500 text-white'
+                                            : 'bg-green-600 hover:bg-green-700 text-white'
+                                        }`}
+                                      >
+                                        ✓
+                                      </button>
+                                      <button
+                                        onClick={cancelEditingQuantity}
+                                        className={`px-2 py-1 rounded font-medium ${
+                                          darkMode
+                                            ? 'bg-red-600 hover:bg-red-500 text-white'
+                                            : 'bg-red-600 hover:bg-red-700 text-white'
+                                        }`}
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => startEditingQuantity(item._id, item.quantity)}
+                                      className={`px-2.5 py-1 rounded-full font-medium transition-all ${
+                                        darkMode
+                                          ? 'bg-blue-900/30 text-blue-300 hover:bg-blue-900/50'
+                                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                      }`}
+                                    >
+                                      Qty: {item.quantity}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => deleteItem(item._id)}
+                                className={`flex-shrink-0 p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                                  darkMode
+                                    ? 'text-red-400 hover:bg-red-900/20'
+                                    : 'text-red-600 hover:bg-red-100'
+                                }`}
+                              >
+                                ✕
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )
+                })
+              })()}
+            </div>
           ))}
         </div>
       </div>
