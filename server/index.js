@@ -14,8 +14,8 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Shopping Item Schema
 const shoppingItemSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
+    name: {
+        type: String,
         required: true
     },
     quantity: {
@@ -26,20 +26,24 @@ const shoppingItemSchema = new mongoose.Schema({
         type: String,
         default: 'general'
     },
-    purchased: { 
-        type: Boolean, 
+    purchased: {
+        type: Boolean,
         default: false
     },
     addedBy: {
         type: String,
         required: true
     },
-    createdAt: { 
-        type: Date, 
+    comment: {
+        type: String,
+        default: ''
+    },
+    createdAt: {
+        type: Date,
         default: Date.now
     },
-    purchasedAt: { 
-        type: Date, 
+    purchasedAt: {
+        type: Date,
         default: null
     }
 });

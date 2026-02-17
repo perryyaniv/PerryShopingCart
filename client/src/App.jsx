@@ -25,6 +25,8 @@ function App() {
   const connectionStatus = useConnectionStatus(API_BASE_URL)
   const [editingQuantity, setEditingQuantity] = useState(null)
   const [editQuantityValue, setEditQuantityValue] = useState('')
+  const [editingComment, setEditingComment] = useState(null)
+  const [editCommentValue, setEditCommentValue] = useState('')
   const [collapsedCategories, setCollapsedCategories] = useState(new Set())
   const [categoryOrder, setCategoryOrder] = useState([
     'General',
@@ -143,6 +145,19 @@ function App() {
       return
     }
 
+    // Capture item data before marking as purchased
+    const item = activeList.items.find(i => i._id === itemId)
+    if (!item) return
+
+    const itemData = {
+      name: item.name,
+      quantity: item.quantity,
+      category: item.category,
+      addedBy: item.addedBy,
+      comment: item.comment || '',
+      purchased: false
+    }
+
     // Mark this item as being processed (synchronously)
     console.log('Processing item:', itemId)
     processingRef.current.add(itemId)
@@ -157,6 +172,21 @@ function App() {
       setActiveList(response.data)
       // Refresh history to show newly archived item
       await fetchHistory()
+
+      // Record action for undo
+      const undoId = recordAction('PURCHASE_ITEM', itemData, async () => {
+        await axios.post(`${API_BASE_URL}/list/restore-item`, itemData)
+        fetchActiveList()
+        fetchHistory()
+      })
+
+      // Show notification with undo
+      showNotification(`"${itemData.name}" marked as purchased`, {
+        type: 'success',
+        showUndo: true,
+        onUndo: () => performUndo(undoId),
+        duration: 7000
+      })
     } catch (error) {
       console.error('Error marking item as purchased:', error)
     } finally {
@@ -173,10 +203,35 @@ function App() {
 
   const deleteItem = async (itemId) => {
     try {
+      // Capture item data before deleting
+      const item = activeList.items.find(i => i._id === itemId)
+      if (!item) return
+
+      const itemData = {
+        name: item.name,
+        quantity: item.quantity,
+        category: item.category,
+        addedBy: item.addedBy,
+        comment: item.comment || ''
+      }
+
       const response = await axios.delete(
         `${API_BASE_URL}/list/active/items/${itemId}`
       )
       setActiveList(response.data)
+
+      // Record action for undo
+      const undoId = recordAction('DELETE_ITEM', itemData, async () => {
+        await axios.post(`${API_BASE_URL}/list/active/items`, itemData)
+        fetchActiveList()
+      })
+
+      // Show notification with undo
+      showNotification(`Deleted "${itemData.name}"`, {
+        type: 'info',
+        showUndo: true,
+        onUndo: () => performUndo(undoId)
+      })
     } catch (error) {
       console.error('Error deleting item:', error)
     }
@@ -190,6 +245,31 @@ function App() {
   const cancelEditingQuantity = () => {
     setEditingQuantity(null)
     setEditQuantityValue('')
+  }
+
+  const startEditingComment = (itemId, currentComment) => {
+    setEditingComment(itemId)
+    setEditCommentValue(currentComment || '')
+  }
+
+  const cancelEditingComment = () => {
+    setEditingComment(null)
+    setEditCommentValue('')
+  }
+
+  const updateComment = async (itemId) => {
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/list/active/items/${itemId}`,
+        { comment: editCommentValue.trim() }
+      )
+      setActiveList(response.data)
+      cancelEditingComment()
+
+      showNotification('Comment updated', { type: 'success', duration: 3000 })
+    } catch (error) {
+      console.error('Error updating comment:', error)
+    }
   }
 
   const updateQuantity = async (itemId) => {
@@ -1127,18 +1207,95 @@ function App() {
                                     </button>
                                   )}
                                 </div>
+                                {/* Comment display if exists and not editing */}
+                                {item.comment && editingComment !== item._id && (
+                                  <div className={`mt-2 text-xs italic ${
+                                    darkMode ? 'text-slate-400' : 'text-gray-500'
+                                  }`}>
+                                    💬 {item.comment}
+                                  </div>
+                                )}
+
+                                {/* Comment field - expanded when editing */}
+                                {editingComment === item._id && (
+                                  <div className="mt-3 w-full animate-slide-up">
+                                    <textarea
+                                      value={editCommentValue}
+                                      onChange={(e) => setEditCommentValue(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                          e.preventDefault()
+                                          updateComment(item._id)
+                                        } else if (e.key === 'Escape') {
+                                          cancelEditingComment()
+                                        }
+                                      }}
+                                      onBlur={() => updateComment(item._id)}
+                                      placeholder="Add a note (brand, size, location...)"
+                                      autoFocus
+                                      rows={2}
+                                      className={`w-full px-3 py-2 rounded-lg border text-sm resize-none ${
+                                        darkMode
+                                          ? 'bg-slate-900 border-blue-500 text-white placeholder-slate-500'
+                                          : 'bg-white border-blue-500 text-gray-900 placeholder-gray-400'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+                                    />
+                                    <div className="flex gap-2 mt-2">
+                                      <button
+                                        onClick={() => updateComment(item._id)}
+                                        className={`px-3 py-1.5 rounded-lg font-medium text-xs ${
+                                          darkMode
+                                            ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        }`}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={cancelEditingComment}
+                                        className={`px-3 py-1.5 rounded-lg font-medium text-xs ${
+                                          darkMode
+                                            ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                        }`}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
-                              <button
-                                onClick={() => deleteItem(item._id)}
-                                className={`flex-shrink-0 p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
-                                  darkMode
-                                    ? 'text-red-400 hover:bg-red-900/20'
-                                    : 'text-red-600 hover:bg-red-100'
-                                }`}
-                              >
-                                ✕
-                              </button>
+                              <div className="flex gap-2 flex-shrink-0">
+                                {/* Comment button */}
+                                <button
+                                  onClick={() => startEditingComment(item._id, item.comment)}
+                                  className={`p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                                    item.comment
+                                      ? darkMode
+                                        ? 'text-blue-400 bg-blue-900/20 hover:bg-blue-900/30'
+                                        : 'text-blue-600 bg-blue-100 hover:bg-blue-200'
+                                      : darkMode
+                                        ? 'text-slate-400 hover:bg-slate-800'
+                                        : 'text-gray-400 hover:bg-gray-100'
+                                  }`}
+                                  title={item.comment ? 'Edit comment' : 'Add comment'}
+                                >
+                                  💬
+                                </button>
+
+                                {/* Delete button */}
+                                <button
+                                  onClick={() => deleteItem(item._id)}
+                                  className={`p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
+                                    darkMode
+                                      ? 'text-red-400 hover:bg-red-900/20'
+                                      : 'text-red-600 hover:bg-red-100'
+                                  }`}
+                                >
+                                  ✕
+                                </button>
+                              </div>
                             </li>
                           ))}
                         </ul>
