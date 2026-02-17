@@ -3,10 +3,15 @@ import axios from 'axios'
 import './App.css'
 import useConnectionStatus from './hooks/useConnectionStatus'
 import ConnectionIndicator from './components/ConnectionIndicator'
+import ToastContainer from './components/ToastContainer'
+import { useNotification } from './context/NotificationContext'
+import useUndo from './hooks/useUndo'
+import useSocket from './hooks/useSocket'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://perry-shopping-server.onrender.com';
 
 function App() {
+  const socket = useSocket(API_BASE_URL)
   const [currentUser, setCurrentUser] = useState(null)
   const [userName, setUserName] = useState('')
   const [activeList, setActiveList] = useState(null)
@@ -76,6 +81,29 @@ function App() {
       console.error('Error fetching history:', error)
     }
   }
+
+  // Listen for real-time updates
+  useEffect(() => {
+    if (!socket) return
+
+    // Listen for active list updates
+    socket.on('list-updated', ({ activeList }) => {
+      console.log('📡 Received list update')
+      setActiveList(activeList)
+    })
+
+    // Listen for history updates
+    socket.on('history-updated', ({ history }) => {
+      console.log('📡 Received history update')
+      setHistoryList(history)
+    })
+
+    // Cleanup listeners
+    return () => {
+      socket.off('list-updated')
+      socket.off('history-updated')
+    }
+  }, [socket])
 
   const handleLoginUser = () => {
     if (userName.trim()) {

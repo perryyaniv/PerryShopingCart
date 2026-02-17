@@ -1,12 +1,35 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.IO setup with CORS
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE']
+  }
+});
 
 app.use(cors());
 app.use(express.json());
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('👤 Client connected:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('👋 Client disconnected:', socket.id);
+  });
+});
+
+// Make io available to routes
+app.set('io', io);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ Connected to MongoDB Atlas!'))
@@ -175,7 +198,11 @@ app.post('/list/active/items', async (req, res) => {
         list.items.push(newItem);
         list.lastModified = new Date();
         const updatedList = await list.save();
-        
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('list-updated', { activeList: updatedList });
+
         res.status(201).json(updatedList);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -200,6 +227,7 @@ app.patch('/list/active/items/:itemId', async (req, res) => {
         if (req.body.name !== undefined) item.name = req.body.name;
         if (req.body.quantity !== undefined) item.quantity = req.body.quantity;
         if (req.body.category !== undefined) item.category = req.body.category;
+        if (req.body.comment !== undefined) item.comment = req.body.comment;
         if (req.body.purchased !== undefined) {
             // If marking as purchased, archive it and remove from active list
             if (req.body.purchased === true && !item.purchased) {
@@ -207,6 +235,14 @@ app.patch('/list/active/items/:itemId', async (req, res) => {
                 item.deleteOne();
                 list.lastModified = new Date();
                 const updatedList = await list.save();
+
+                // Emit updates to all clients
+                const io = req.app.get('io');
+                io.emit('list-updated', { activeList: updatedList });
+                // Also fetch and emit updated history
+                const history = await HistoryEntry.find().sort({ completedAt: -1 });
+                io.emit('history-updated', { history });
+
                 return res.json(updatedList);
             }
             item.purchased = req.body.purchased;
@@ -215,6 +251,11 @@ app.patch('/list/active/items/:itemId', async (req, res) => {
 
         list.lastModified = new Date();
         const updatedList = await list.save();
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('list-updated', { activeList: updatedList });
+
         res.json(updatedList);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -240,6 +281,10 @@ app.delete('/list/active/items/:itemId', async (req, res) => {
         item.deleteOne();
         list.lastModified = new Date();
         const updatedList = await list.save();
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('list-updated', { activeList: updatedList });
 
         res.json(updatedList);
     } catch (err) {
@@ -316,9 +361,49 @@ app.post('/list/clear', async (req, res) => {
         activeList.items = [];
         activeList.lastModified = new Date();
         const updatedList = await activeList.save();
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('list-updated', { activeList: updatedList });
+
         res.json(updatedList);
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// Restore purchased item to active list (for undo)
+app.post('/list/restore-item', async (req, res) => {
+    try {
+        const list = await ActiveList.findOne();
+
+        if (!list) {
+            return res.status(404).json({ message: "Active list not found" });
+        }
+
+        const newItem = {
+            _id: new mongoose.Types.ObjectId(),
+            name: req.body.name,
+            quantity: req.body.quantity || 1,
+            category: req.body.category || 'general',
+            addedBy: req.body.addedBy,
+            comment: req.body.comment || '',
+            purchased: false,
+            createdAt: new Date(),
+            purchasedAt: null
+        };
+
+        list.items.push(newItem);
+        list.lastModified = new Date();
+        const updatedList = await list.save();
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('list-updated', { activeList: updatedList });
+
+        res.status(201).json(updatedList);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 });
 
@@ -327,6 +412,11 @@ app.delete('/list/history/:historyId', async (req, res) => {
     try {
         await HistoryEntry.findByIdAndDelete(req.params.historyId);
         const history = await HistoryEntry.find().sort({ completedAt: -1 });
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('history-updated', { history });
+
         res.json(history);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -340,11 +430,16 @@ app.delete('/list/history/:historyId/items/:itemId', async (req, res) => {
         if (!historyEntry) {
             return res.status(404).json({ message: "History entry not found" });
         }
-        
+
         historyEntry.items.id(req.params.itemId).deleteOne();
         const updated = await historyEntry.save();
-        
+
         const history = await HistoryEntry.find().sort({ completedAt: -1 });
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('history-updated', { history });
+
         res.json(history);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -355,6 +450,11 @@ app.delete('/list/history/:historyId/items/:itemId', async (req, res) => {
 app.delete('/list/history', async (req, res) => {
     try {
         await HistoryEntry.deleteMany({});
+
+        // Emit to all clients
+        const io = req.app.get('io');
+        io.emit('history-updated', { history: [] });
+
         res.json({ message: "All history cleared" });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -366,6 +466,7 @@ app.get('/', (req, res) => {
 });
 
 const PORT = 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🚀 Server is flying on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.IO ready for connections`);
 });
