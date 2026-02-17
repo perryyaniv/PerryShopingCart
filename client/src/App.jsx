@@ -742,48 +742,45 @@ function App() {
                 </div>
               </>
             )}
-          </div>
 
-          {/* History Tab Content */}
-          {activeTab === 'history' && (
-            <div className={`mb-6 md:mb-8 p-4 md:p-6 rounded-xl transition-colors duration-300 border ${
-              darkMode
-                ? 'bg-slate-900 border-slate-800'
-                : 'bg-white border-gray-200'
-            }`}>
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Archived Items
-                </h2>
-                {historyList.length > 0 && (
+            {/* History Tab Content */}
+            {activeTab === 'history' && (
+              <>
+                <input
+                  type="text"
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  placeholder="Search archived items..."
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm mb-3 md:mb-4 ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                />
+
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   <button
-                    onClick={clearAllHistory}
+                    onClick={() => clearAllHistory()}
                     className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
                       darkMode
                         ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
                         : 'bg-red-100 text-red-600 hover:bg-red-200'
                     }`}
                   >
-                    Clear All
+                    Clear
                   </button>
-                )}
-              </div>
+                </div>
+              </>
+            )}
+          </div>
 
-              {/* Search Input for History */}
-              {historyList.length > 0 && (
-                <input
-                  type="text"
-                  value={historySearchQuery}
-                  onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  placeholder="Search archived items..."
-                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm mb-4 ${
-                    darkMode
-                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
-                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
-                />
-              )}
-              
+          {/* History Items List */}
+          {activeTab === 'history' && (
+            <div className={`mb-6 md:mb-8 p-4 md:p-6 rounded-xl transition-colors duration-300 border ${
+              darkMode
+                ? 'bg-slate-900 border-slate-800'
+                : 'bg-white border-gray-200'
+            }`}>
               {historyList.length === 0 ? (
                 <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                   No archived items found
