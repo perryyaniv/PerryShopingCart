@@ -16,6 +16,7 @@ function App() {
   const [itemCategory, setItemCategory] = useState('General')
   const [darkMode, setDarkMode] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [historySearchQuery, setHistorySearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('active')
   const [pastUsers, setPastUsers] = useState([])
   const [processingItems, setProcessingItems] = useState(new Set())
@@ -767,6 +768,21 @@ function App() {
                   </button>
                 )}
               </div>
+
+              {/* Search Input for History */}
+              {historyList.length > 0 && (
+                <input
+                  type="text"
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  placeholder="Search archived items..."
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm mb-4 ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                />
+              )}
               
               {historyList.length === 0 ? (
                 <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
@@ -796,10 +812,41 @@ function App() {
                       }, new Map()).values()
                     )
 
-                    // Sort by most recent first
-                    uniqueItems.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+                    // Filter by search query
+                    const filteredItems = historySearchQuery.trim()
+                      ? uniqueItems.filter(item =>
+                          item.name.toLowerCase().includes(historySearchQuery.toLowerCase())
+                        )
+                      : uniqueItems
 
-                    return uniqueItems.map((item) => {
+                    // Sort: items not in active list first, then by most recent
+                    filteredItems.sort((a, b) => {
+                      const aInList = activeList?.items.some(
+                        activeItem => activeItem.name.toLowerCase() === a.name.toLowerCase()
+                      )
+                      const bInList = activeList?.items.some(
+                        activeItem => activeItem.name.toLowerCase() === b.name.toLowerCase()
+                      )
+
+                      // Prioritize items NOT in active list
+                      if (aInList !== bInList) {
+                        return aInList ? 1 : -1
+                      }
+
+                      // Then sort by most recent
+                      return new Date(b.completedAt) - new Date(a.completedAt)
+                    })
+
+                    // Show message if search returns no results
+                    if (filteredItems.length === 0) {
+                      return (
+                        <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                          No items match your search
+                        </p>
+                      )
+                    }
+
+                    return filteredItems.map((item) => {
                       const existsInActiveList = activeList?.items.some(
                         activeItem => activeItem.name.toLowerCase() === item.name.toLowerCase()
                       )
