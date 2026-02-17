@@ -19,6 +19,7 @@ function App() {
   const [itemName, setItemName] = useState('')
   const [itemQuantity, setItemQuantity] = useState(1)
   const [itemCategory, setItemCategory] = useState('General')
+  const [itemComment, setItemComment] = useState('')
   const [darkMode, setDarkMode] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [historySearchQuery, setHistorySearchQuery] = useState('')
@@ -162,6 +163,7 @@ function App() {
         name: trimmedName,
         quantity: parseInt(itemQuantity),
         category: itemCategory,
+        comment: itemComment.trim(),
         addedBy: currentUser
       }
 
@@ -171,6 +173,7 @@ function App() {
       setItemName('')
       setItemQuantity(1)
       setItemCategory('General')
+      setItemComment('')
     } catch (error) {
       console.error('Error adding item:', error)
     }
@@ -794,6 +797,19 @@ function App() {
                   <option value="Pantry">Pantry</option>
                 </select>
               </div>
+
+              <input
+                type="text"
+                value={itemComment}
+                onChange={(e) => setItemComment(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !itemExists && addItem()}
+                placeholder="Add a comment (optional)"
+                className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm ${
+                  darkMode
+                    ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
+                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+              />
 
               <button
                 onClick={addItem}

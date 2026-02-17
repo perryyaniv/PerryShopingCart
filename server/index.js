@@ -190,11 +190,12 @@ app.post('/list/active/items', async (req, res) => {
             quantity: req.body.quantity || 1,
             category: req.body.category || 'general',
             addedBy: req.body.addedBy,
+            comment: req.body.comment || '',
             purchased: false,
             createdAt: new Date(),
             purchasedAt: null
         };
-        
+
         list.items.push(newItem);
         list.lastModified = new Date();
         const updatedList = await list.save();
