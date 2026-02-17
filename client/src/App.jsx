@@ -64,6 +64,16 @@ function App() {
     }
   }, [])
 
+  // Retry fetching when disconnected so we detect when the server comes back
+  useEffect(() => {
+    if (connectionStatus !== 'disconnected') return
+    const interval = setInterval(() => {
+      fetchActiveList()
+      fetchHistory()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [connectionStatus])
+
   const fetchActiveList = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/list/active`)
@@ -500,9 +510,37 @@ function App() {
             <h1 className={`text-2xl md:text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Perry Shopping Cart
             </h1>
-            <p className={`mb-6 text-sm ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+            <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-600'} ${connectionStatus === 'connected' ? 'mb-6' : 'mb-4'}`}>
               Enter your name to get started
             </p>
+
+            {connectionStatus !== 'connected' && (
+              <div className={`mb-4 p-3 rounded-lg border ${
+                darkMode
+                  ? 'bg-slate-800/50 border-slate-700'
+                  : 'bg-amber-50 border-amber-200'
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${
+                    connectionStatus === 'checking' ? 'bg-amber-400' : 'bg-red-400'
+                  }`} />
+                  <span className={`text-xs font-medium ${
+                    darkMode ? 'text-slate-300' : 'text-amber-800'
+                  }`}>
+                    {connectionStatus === 'checking' ? 'Connecting to server...' : 'Server unavailable. Retrying...'}
+                  </span>
+                </div>
+                <div className={`connecting-progress-bar ${
+                  darkMode ? 'bg-slate-700' : 'bg-amber-200'
+                }`}>
+                  <div className={`h-full w-full ${
+                    connectionStatus === 'checking'
+                      ? darkMode ? 'bg-amber-400' : 'bg-amber-500'
+                      : darkMode ? 'bg-red-400' : 'bg-red-500'
+                  }`} style={{ animation: 'progress-slide 1.4s ease-in-out infinite' }} />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-4">
               {pastUsers.length > 0 ? (
@@ -511,7 +549,7 @@ function App() {
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleLoginUser()}
+                    onKeyPress={(e) => e.key === 'Enter' && connectionStatus === 'connected' && handleLoginUser()}
                     placeholder="Select or type your name"
                     list="usersList"
                     className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
@@ -545,7 +583,7 @@ function App() {
                   type="text"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleLoginUser()}
+                  onKeyPress={(e) => e.key === 'Enter' && connectionStatus === 'connected' && handleLoginUser()}
                   placeholder="Your name"
                   className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
@@ -557,13 +595,16 @@ function App() {
 
               <button
                 onClick={handleLoginUser}
+                disabled={connectionStatus !== 'connected'}
                 className={`w-full px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
-                  darkMode
-                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  connectionStatus !== 'connected'
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : darkMode
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
               >
-                Log In
+                {connectionStatus !== 'connected' ? 'Connecting...' : 'Log In'}
               </button>
             </div>
 

@@ -304,3 +304,14 @@ body {
     filter: brightness(1);
   }
 }
+
+/* Indeterminate progress bar */
+@keyframes progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.connecting-progress-bar {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+}
