@@ -29,7 +29,10 @@ function App() {
   const [itemQuantity, setItemQuantity] = useState(1)
   const [itemCategory, setItemCategory] = useState('General')
   const [itemComment, setItemComment] = useState('')
-  const [darkMode, setDarkMode] = useState(true)
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode')
+    return saved !== null ? saved === 'true' : true
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [historySearchQuery, setHistorySearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('active')
@@ -58,6 +61,11 @@ function App() {
 
   // Helper: build a URL scoped to the current cart
   const cartUrl = (path) => `${API_BASE_URL}/cart/${currentCart._id}${path}`
+
+  // Persist dark mode preference
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode)
+  }, [darkMode])
 
   // Initial ping to establish connection status (needed when no cart is loaded yet)
   useEffect(() => {
