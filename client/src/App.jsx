@@ -741,7 +741,7 @@ function App() {
                   value={cartCodeInput}
                   onChange={(e) => setCartCodeInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleJoinCart()}
-                  placeholder="Cart code (e.g. perrycart)"
+                  placeholder="Cart code (e.g. MyFamilyCart)"
                   autoFocus
                   className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
