@@ -28,6 +28,9 @@ function App() {
   const [processingItems, setProcessingItems] = useState(new Set())
   const processingRef = useRef(new Set())
   const [showDemonicMessage, setShowDemonicMessage] = useState(false)
+  // Opening screen selector: 1 = No Rest For The Wicked, 2 = Epic Fury
+  // Add more options here as new screens are created
+  const [openingScreen] = useState(2)
   const connectionStatus = useConnectionStatus(API_BASE_URL)
   const [editingQuantity, setEditingQuantity] = useState(null)
   const [editQuantityValue, setEditQuantityValue] = useState('')
@@ -630,8 +633,8 @@ function App() {
   return (
     <div className={darkMode ? 'dark' : ''}>
       <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-gray-50'}`}>
-        {/* Demonic Message Overlay */}
-        {showDemonicMessage && (
+        {/* Demonic Message Overlay — Opening Screen 1: No Rest For The Wicked */}
+        {showDemonicMessage && openingScreen === 1 && (
           <div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn px-4"
                style={{
                  background: 'radial-gradient(circle, rgba(139,0,0,0.95) 0%, rgba(0,0,0,0.98) 100%)',
@@ -661,6 +664,85 @@ function App() {
                 <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.1s' }}>🔥</span>
                 <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.3s' }}>🔥</span>
                 <span className="text-3xl md:text-5xl animate-pulse" style={{ animationDelay: '0.5s' }}>🔥</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Epic Fury Opening Screen — Opening Screen 2 */}
+        {showDemonicMessage && openingScreen === 2 && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{
+              background: 'radial-gradient(ellipse at center, rgba(0,10,60,0.97) 0%, rgba(0,0,20,0.99) 100%)',
+              animation: 'fadeInOut 5s ease-in-out',
+            }}
+          >
+            <div className="text-center max-w-full">
+              {/* Eagle & Lion */}
+              <div className="flex justify-center items-center gap-6 md:gap-14 mb-3 md:mb-5">
+                <span className="text-5xl md:text-7xl" style={{ animation: 'symbolPulse 1.2s ease-in-out infinite alternate' }}>🦅</span>
+                <div className="flex flex-col items-center gap-1">
+                  <span style={{ color: '#FFD700', fontSize: '1.4rem', letterSpacing: '0.3em' }}>✦✡✦</span>
+                  <span style={{ color: '#4a8eff', fontSize: '1rem', letterSpacing: '0.25em' }}>★ ★ ★</span>
+                </div>
+                <span className="text-5xl md:text-7xl" style={{ animation: 'symbolPulse 1.2s ease-in-out infinite alternate', animationDelay: '0.6s' }}>🦁</span>
+              </div>
+
+              {/* Stars & Stars of David */}
+              <div className="flex justify-center gap-3 mb-3">
+                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
+                <span style={{ color: '#7ab8ff', fontSize: '1.4rem' }}>✡</span>
+                <span style={{ color: '#DD0000', fontSize: '1.4rem' }}>★</span>
+                <span style={{ color: '#FFFFFF', fontSize: '1.4rem' }}>✡</span>
+                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
+              </div>
+
+              {/* OPERATION label */}
+              <div
+                className="text-base md:text-xl font-black mb-1 tracking-widest"
+                style={{ color: '#7ab8ff', letterSpacing: '0.45em', textShadow: '0 0 10px #4a8eff' }}
+              >
+                — OPERATION —
+              </div>
+
+              {/* EPIC FURY */}
+              <h1
+                className="text-5xl sm:text-7xl md:text-9xl font-black mb-3 px-2"
+                style={{
+                  color: '#FFD700',
+                  WebkitTextStroke: '1px rgba(255,255,255,0.25)',
+                  textShadow: '0 0 25px #FFD700, 0 0 50px #3366ff, 0 0 80px #FFD700, 0 4px 15px rgba(0,0,0,0.9)',
+                  animation: 'epicGlow 1.2s ease-in-out infinite alternate',
+                  letterSpacing: '0.1em',
+                  lineHeight: '1.05',
+                }}
+              >
+                EPIC FURY
+              </h1>
+
+              {/* Flags */}
+              <div className="flex justify-center items-center gap-4 mb-3">
+                <span className="text-3xl md:text-4xl">🇺🇸</span>
+                <span className="text-2xl md:text-3xl font-black" style={{ color: '#ffffff', textShadow: '0 0 10px #fff' }}>⚔</span>
+                <span className="text-3xl md:text-4xl">🇮🇱</span>
+              </div>
+
+              {/* Tagline */}
+              <div
+                className="text-xs md:text-sm font-bold tracking-widest uppercase"
+                style={{ color: '#a0c4ff', letterSpacing: '0.3em', textShadow: '0 0 8px #4a8eff55' }}
+              >
+                IRON ALLIANCE · UNITED FRONT
+              </div>
+
+              {/* Bottom Stars */}
+              <div className="flex justify-center gap-3 mt-3">
+                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
+                <span style={{ color: '#7ab8ff', fontSize: '1.4rem' }}>✡</span>
+                <span style={{ color: '#DD0000', fontSize: '1.4rem' }}>★</span>
+                <span style={{ color: '#FFFFFF', fontSize: '1.4rem' }}>✡</span>
+                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
               </div>
             </div>
           </div>
