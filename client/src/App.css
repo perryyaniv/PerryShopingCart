@@ -308,15 +308,15 @@ body {
 /* Epic Fury Opening Screen Animations */
 @keyframes epicGlow {
   0% {
-    text-shadow: 0 0 25px #FFD700, 0 0 50px #3366ff, 0 0 80px #FFD700, 0 4px 15px rgba(0,0,0,0.9);
+    text-shadow: 0 0 25px #CC0000, 0 0 50px #3366ff, 0 0 80px #CC0000, 0 4px 15px rgba(0,0,0,0.9);
     filter: brightness(1);
   }
   50% {
-    text-shadow: 0 0 40px #FFD700, 0 0 80px #4a8eff, 0 0 120px #FFD700, 0 0 160px #3366ff, 0 4px 15px rgba(0,0,0,0.9);
+    text-shadow: 0 0 40px #CC0000, 0 0 80px #4a8eff, 0 0 120px #CC0000, 0 0 160px #3366ff, 0 4px 15px rgba(0,0,0,0.9);
     filter: brightness(1.4);
   }
   100% {
-    text-shadow: 0 0 25px #FFD700, 0 0 50px #3366ff, 0 0 80px #FFD700, 0 4px 15px rgba(0,0,0,0.9);
+    text-shadow: 0 0 25px #CC0000, 0 0 50px #3366ff, 0 0 80px #CC0000, 0 4px 15px rgba(0,0,0,0.9);
     filter: brightness(1);
   }
 }

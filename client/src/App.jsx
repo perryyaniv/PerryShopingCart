@@ -679,24 +679,6 @@ function App() {
             }}
           >
             <div className="text-center max-w-full">
-              {/* Eagle & Lion */}
-              <div className="flex justify-center items-center gap-6 md:gap-14 mb-3 md:mb-5">
-                <span className="text-5xl md:text-7xl" style={{ animation: 'symbolPulse 1.2s ease-in-out infinite alternate' }}>🦅</span>
-                <div className="flex flex-col items-center gap-1">
-                  <span style={{ color: '#FFD700', fontSize: '1.4rem', letterSpacing: '0.3em' }}>✦✡✦</span>
-                  <span style={{ color: '#4a8eff', fontSize: '1rem', letterSpacing: '0.25em' }}>★ ★ ★</span>
-                </div>
-                <span className="text-5xl md:text-7xl" style={{ animation: 'symbolPulse 1.2s ease-in-out infinite alternate', animationDelay: '0.6s' }}>🦁</span>
-              </div>
-
-              {/* Stars & Stars of David */}
-              <div className="flex justify-center gap-3 mb-3">
-                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
-                <span style={{ color: '#7ab8ff', fontSize: '1.4rem' }}>✡</span>
-                <span style={{ color: '#DD0000', fontSize: '1.4rem' }}>★</span>
-                <span style={{ color: '#FFFFFF', fontSize: '1.4rem' }}>✡</span>
-                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
-              </div>
 
               {/* OPERATION label */}
               <div
@@ -708,11 +690,11 @@ function App() {
 
               {/* EPIC FURY */}
               <h1
-                className="text-5xl sm:text-7xl md:text-9xl font-black mb-3 px-2"
+                className="text-5xl sm:text-7xl md:text-9xl font-black mb-4 px-2"
                 style={{
-                  color: '#FFD700',
+                  color: '#CC0000',
                   WebkitTextStroke: '1px rgba(255,255,255,0.25)',
-                  textShadow: '0 0 25px #FFD700, 0 0 50px #3366ff, 0 0 80px #FFD700, 0 4px 15px rgba(0,0,0,0.9)',
+                  textShadow: '0 0 25px #CC0000, 0 0 50px #3366ff, 0 0 80px #CC0000, 0 4px 15px rgba(0,0,0,0.9)',
                   animation: 'epicGlow 1.2s ease-in-out infinite alternate',
                   letterSpacing: '0.1em',
                   lineHeight: '1.05',
@@ -721,11 +703,46 @@ function App() {
                 EPIC FURY
               </h1>
 
-              {/* Flags */}
-              <div className="flex justify-center items-center gap-4 mb-3">
-                <span className="text-3xl md:text-4xl">🇺🇸</span>
-                <span className="text-2xl md:text-3xl font-black" style={{ color: '#ffffff', textShadow: '0 0 10px #fff' }}>⚔</span>
-                <span className="text-3xl md:text-4xl">🇮🇱</span>
+              {/* Combat scene: Alliance ──⚔──▶ Iran */}
+              <div className="flex justify-center items-center gap-3 md:gap-6 mb-3">
+
+                {/* Alliance side — Eagle & Lion together */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <span className="text-4xl md:text-6xl" style={{ animation: 'symbolPulse 1.2s ease-in-out infinite alternate' }}>🦅</span>
+                    <span className="text-4xl md:text-6xl" style={{ animation: 'symbolPulse 1.2s ease-in-out infinite alternate', animationDelay: '0.4s' }}>🦁</span>
+                  </div>
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <span className="text-xl md:text-2xl">🇺🇸</span>
+                    <span style={{ color: '#ffffff', fontSize: '0.9rem', fontWeight: 900 }}>+</span>
+                    <span className="text-xl md:text-2xl">🇮🇱</span>
+                  </div>
+                  <span className="text-xs font-bold tracking-widest" style={{ color: '#7ab8ff', letterSpacing: '0.2em' }}>USA · ISRAEL</span>
+                </div>
+
+                {/* Strike arrow */}
+                <div className="flex flex-col items-center gap-1 px-1">
+                  <span className="text-2xl md:text-3xl font-black" style={{ color: '#ffffff', textShadow: '0 0 12px #fff' }}>⚔</span>
+                  <span className="text-lg md:text-2xl" style={{ color: '#CC0000', textShadow: '0 0 8px #CC0000' }}>▶▶</span>
+                  <span className="text-xs font-black tracking-widest" style={{ color: '#CC0000', letterSpacing: '0.15em' }}>STRIKE</span>
+                </div>
+
+                {/* Iran — target side */}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-4xl md:text-6xl">💥</span>
+                  <span className="text-xl md:text-2xl" style={{ filter: 'grayscale(0.4) brightness(0.75)' }}>🇮🇷</span>
+                  <span className="text-xs font-black tracking-widest" style={{ color: '#ff4444', letterSpacing: '0.2em', textDecoration: 'line-through' }}>IRAN</span>
+                </div>
+
+              </div>
+
+              {/* Stars & Stars of David */}
+              <div className="flex justify-center gap-3 mb-2">
+                <span style={{ color: '#CC0000', fontSize: '1.3rem' }}>★</span>
+                <span style={{ color: '#7ab8ff', fontSize: '1.3rem' }}>✡</span>
+                <span style={{ color: '#CC0000', fontSize: '1.3rem' }}>★</span>
+                <span style={{ color: '#FFFFFF', fontSize: '1.3rem' }}>✡</span>
+                <span style={{ color: '#CC0000', fontSize: '1.3rem' }}>★</span>
               </div>
 
               {/* Tagline */}
@@ -736,14 +753,6 @@ function App() {
                 IRON ALLIANCE · UNITED FRONT
               </div>
 
-              {/* Bottom Stars */}
-              <div className="flex justify-center gap-3 mt-3">
-                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
-                <span style={{ color: '#7ab8ff', fontSize: '1.4rem' }}>✡</span>
-                <span style={{ color: '#DD0000', fontSize: '1.4rem' }}>★</span>
-                <span style={{ color: '#FFFFFF', fontSize: '1.4rem' }}>✡</span>
-                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>★</span>
-              </div>
             </div>
           </div>
         )}
