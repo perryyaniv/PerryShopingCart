@@ -12,8 +12,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://perry-shopping-ser
 
 function App() {
   const socket = useSocket(API_BASE_URL)
+  const { showNotification } = useNotification()
+  const { recordAction, performUndo } = useUndo()
+
   const [currentUser, setCurrentUser] = useState(null)
   const [userName, setUserName] = useState('')
+  const [currentCart, setCurrentCart] = useState(null)
+  const [cartMode, setCartMode] = useState(null) // null | 'create' | 'join'
+  const [cartNameInput, setCartNameInput] = useState('')
+  const [cartCodeInput, setCartCodeInput] = useState('')
+  const [cartError, setCartError] = useState('')
+
   const [activeList, setActiveList] = useState(null)
   const [historyList, setHistoryList] = useState([])
   const [itemName, setItemName] = useState('')
@@ -47,40 +56,58 @@ function App() {
     'Pantry'
   ])
 
-  // Fetch active list and past users on mount
+  // Helper: build a URL scoped to the current cart
+  const cartUrl = (path) => `${API_BASE_URL}/cart/${currentCart._id}${path}`
+
+  // Load persisted data on mount
   useEffect(() => {
-    fetchActiveList()
-    fetchHistory()
+    const savedCart = localStorage.getItem('savedCart')
+    if (savedCart) {
+      try { setCurrentCart(JSON.parse(savedCart)) } catch (e) { /* ignore */ }
+    }
+
     const saved = localStorage.getItem('pastUsers')
     if (saved) {
       const users = JSON.parse(saved)
       setPastUsers(users)
-      // Set first user as default
       if (users.length > 0 && !userName) {
         setUserName(users[0])
       }
     }
 
-    // Load category order from localStorage
     const savedCategoryOrder = localStorage.getItem('categoryOrder')
     if (savedCategoryOrder) {
       setCategoryOrder(JSON.parse(savedCategoryOrder))
     }
   }, [])
 
+  // Fetch list and history whenever cart changes
+  useEffect(() => {
+    if (!currentCart) return
+    fetchActiveList()
+    fetchHistory()
+  }, [currentCart?._id])
+
   // Retry fetching when disconnected so we detect when the server comes back
   useEffect(() => {
-    if (connectionStatus !== 'disconnected') return
+    if (connectionStatus !== 'disconnected' || !currentCart) return
     const interval = setInterval(() => {
       fetchActiveList()
       fetchHistory()
     }, 5000)
     return () => clearInterval(interval)
-  }, [connectionStatus])
+  }, [connectionStatus, currentCart])
+
+  // Join the cart's Socket.IO room when cart is set
+  useEffect(() => {
+    if (!socket || !currentCart) return
+    socket.emit('join-cart', currentCart._id)
+  }, [socket, currentCart?._id])
 
   const fetchActiveList = async () => {
+    if (!currentCart) return
     try {
-      const response = await axios.get(`${API_BASE_URL}/list/active`)
+      const response = await axios.get(`${API_BASE_URL}/cart/${currentCart._id}/list/active`)
       setActiveList(response.data)
     } catch (error) {
       console.error('Error fetching list:', error)
@@ -88,8 +115,9 @@ function App() {
   }
 
   const fetchHistory = async () => {
+    if (!currentCart) return
     try {
-      const response = await axios.get(`${API_BASE_URL}/list/history`)
+      const response = await axios.get(`${API_BASE_URL}/cart/${currentCart._id}/list/history`)
       setHistoryList(response.data)
     } catch (error) {
       console.error('Error fetching history:', error)
@@ -100,19 +128,16 @@ function App() {
   useEffect(() => {
     if (!socket) return
 
-    // Listen for active list updates
     socket.on('list-updated', ({ activeList }) => {
       console.log('📡 Received list update')
       setActiveList(activeList)
     })
 
-    // Listen for history updates
     socket.on('history-updated', ({ history }) => {
       console.log('📡 Received history update')
       setHistoryList(history)
     })
 
-    // Cleanup listeners
     return () => {
       socket.off('list-updated')
       socket.off('history-updated')
@@ -125,13 +150,6 @@ function App() {
       setCurrentUser(trimmedName)
       setUserName('')
 
-      // Show demonic message
-      setShowDemonicMessage(true)
-      setTimeout(() => {
-        setShowDemonicMessage(false)
-      }, 5000)
-
-      // Save to past users if not already there
       if (!pastUsers.includes(trimmedName)) {
         const updated = [trimmedName, ...pastUsers]
         setPastUsers(updated)
@@ -144,24 +162,67 @@ function App() {
     setCurrentUser(null)
   }
 
+  const handleCreateCart = async () => {
+    if (!cartNameInput.trim() || !cartCodeInput.trim()) return
+    setCartError('')
+    try {
+      const res = await axios.post(`${API_BASE_URL}/cart`, {
+        name: cartNameInput.trim(),
+        code: cartCodeInput.trim()
+      })
+      const cart = res.data
+      setCurrentCart(cart)
+      localStorage.setItem('savedCart', JSON.stringify(cart))
+      setShowDemonicMessage(true)
+      setTimeout(() => setShowDemonicMessage(false), 5000)
+    } catch (err) {
+      setCartError(err.response?.data?.message || 'Failed to create cart')
+    }
+  }
+
+  const handleJoinCart = async () => {
+    if (!cartCodeInput.trim()) return
+    setCartError('')
+    try {
+      const res = await axios.post(`${API_BASE_URL}/cart/join`, {
+        code: cartCodeInput.trim()
+      })
+      const cart = res.data
+      setCurrentCart(cart)
+      localStorage.setItem('savedCart', JSON.stringify(cart))
+      setShowDemonicMessage(true)
+      setTimeout(() => setShowDemonicMessage(false), 5000)
+    } catch (err) {
+      setCartError(err.response?.data?.message || 'Cart not found')
+    }
+  }
+
+  const handleSwitchCart = () => {
+    setCurrentCart(null)
+    localStorage.removeItem('savedCart')
+    setCartMode(null)
+    setCartNameInput('')
+    setCartCodeInput('')
+    setCartError('')
+    setActiveList(null)
+    setHistoryList([])
+  }
+
   const addItem = async () => {
     if (!itemName.trim() || !currentUser) return
 
     try {
       const trimmedName = itemName.trim()
-      
-      // Check if item already exists (case-insensitive)
+
       const existingItem = activeList?.items.find(
         item => item.name.toLowerCase() === trimmedName.toLowerCase()
       )
 
       if (existingItem) {
-        // Show alert that item is already in the list
         alert(`"${existingItem.name}" is already in your shopping list!`)
         return
       }
 
-      // Add new item
       const newItem = {
         name: trimmedName,
         quantity: parseInt(itemQuantity),
@@ -170,7 +231,7 @@ function App() {
         addedBy: currentUser
       }
 
-      const response = await axios.post(`${API_BASE_URL}/list/active/items`, newItem)
+      const response = await axios.post(cartUrl('/list/active/items'), newItem)
       setActiveList(response.data)
 
       setItemName('')
@@ -183,13 +244,11 @@ function App() {
   }
 
   const togglePurchased = async (itemId) => {
-    // Use ref for immediate synchronous check
     if (!activeList || processingRef.current.has(itemId)) {
       console.log('Already processing:', itemId)
       return
     }
 
-    // Capture item data before marking as purchased
     const item = activeList.items.find(i => i._id === itemId)
     if (!item) return
 
@@ -202,29 +261,26 @@ function App() {
       purchased: false
     }
 
-    // Mark this item as being processed (synchronously)
     console.log('Processing item:', itemId)
     processingRef.current.add(itemId)
     setProcessingItems(prev => new Set(prev).add(itemId))
 
+    const capturedCartId = currentCart._id
+
     try {
-      // Mark as purchased - server will archive and remove it
       const response = await axios.patch(
-        `${API_BASE_URL}/list/active/items/${itemId}`,
+        cartUrl(`/list/active/items/${itemId}`),
         { purchased: true }
       )
       setActiveList(response.data)
-      // Refresh history to show newly archived item
       await fetchHistory()
 
-      // Record action for undo
       const undoId = recordAction('PURCHASE_ITEM', itemData, async () => {
-        await axios.post(`${API_BASE_URL}/list/restore-item`, itemData)
+        await axios.post(`${API_BASE_URL}/cart/${capturedCartId}/list/restore-item`, itemData)
         fetchActiveList()
         fetchHistory()
       })
 
-      // Show notification with undo
       showNotification(`"${itemData.name}" marked as purchased`, {
         type: 'success',
         showUndo: true,
@@ -234,7 +290,6 @@ function App() {
     } catch (error) {
       console.error('Error marking item as purchased:', error)
     } finally {
-      // Remove from processing set
       console.log('Done processing:', itemId)
       processingRef.current.delete(itemId)
       setProcessingItems(prev => {
@@ -247,7 +302,6 @@ function App() {
 
   const deleteItem = async (itemId) => {
     try {
-      // Capture item data before deleting
       const item = activeList.items.find(i => i._id === itemId)
       if (!item) return
 
@@ -259,18 +313,16 @@ function App() {
         comment: item.comment || ''
       }
 
-      const response = await axios.delete(
-        `${API_BASE_URL}/list/active/items/${itemId}`
-      )
+      const capturedCartId = currentCart._id
+
+      const response = await axios.delete(cartUrl(`/list/active/items/${itemId}`))
       setActiveList(response.data)
 
-      // Record action for undo
       const undoId = recordAction('DELETE_ITEM', itemData, async () => {
-        await axios.post(`${API_BASE_URL}/list/active/items`, itemData)
+        await axios.post(`${API_BASE_URL}/cart/${capturedCartId}/list/active/items`, itemData)
         fetchActiveList()
       })
 
-      // Show notification with undo
       showNotification(`Deleted "${itemData.name}"`, {
         type: 'info',
         showUndo: true,
@@ -304,7 +356,7 @@ function App() {
   const updateComment = async (itemId) => {
     try {
       const response = await axios.patch(
-        `${API_BASE_URL}/list/active/items/${itemId}`,
+        cartUrl(`/list/active/items/${itemId}`),
         { comment: editCommentValue.trim() }
       )
       setActiveList(response.data)
@@ -325,7 +377,7 @@ function App() {
 
     try {
       const response = await axios.patch(
-        `${API_BASE_URL}/list/active/items/${itemId}`,
+        cartUrl(`/list/active/items/${itemId}`),
         { quantity: newQuantity }
       )
       setActiveList(response.data)
@@ -367,17 +419,14 @@ function App() {
     const filtered = getFilteredItems()
     const grouped = {}
 
-    // Initialize all categories
     categoryOrder.forEach(category => {
       grouped[category] = []
     })
 
-    // Group items by category
     filtered.forEach(item => {
       if (grouped[item.category]) {
         grouped[item.category].push(item)
       } else {
-        // If category doesn't exist in order, add to General
         grouped['General'].push(item)
       }
     })
@@ -387,9 +436,7 @@ function App() {
 
   const copyFromHistory = async (historyId) => {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/list/copy-from-history/${historyId}`
-      )
+      const response = await axios.post(cartUrl(`/list/copy-from-history/${historyId}`))
       setActiveList(response.data)
       setActiveTab('active')
     } catch (error) {
@@ -400,8 +447,7 @@ function App() {
   const addItemFromHistory = async (historyItem) => {
     try {
       const trimmedName = historyItem.name.trim()
-      
-      // Check if item already exists in active list (case-insensitive)
+
       const existingItem = activeList?.items.find(
         item => item.name.toLowerCase() === trimmedName.toLowerCase()
       )
@@ -411,7 +457,6 @@ function App() {
         return
       }
 
-      // Add the history item to active list
       const newItem = {
         name: trimmedName,
         quantity: historyItem.quantity,
@@ -419,7 +464,7 @@ function App() {
         addedBy: currentUser
       }
 
-      const response = await axios.post(`${API_BASE_URL}/list/active/items`, newItem)
+      const response = await axios.post(cartUrl('/list/active/items'), newItem)
       setActiveList(response.data)
     } catch (error) {
       console.error('Error adding item from history:', error)
@@ -428,7 +473,7 @@ function App() {
 
   const archiveList = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/list/archive`)
+      await axios.post(cartUrl('/list/archive'))
       fetchActiveList()
       fetchHistory()
     } catch (error) {
@@ -439,7 +484,7 @@ function App() {
   const clearList = async () => {
     if (window.confirm('Clear the entire list?')) {
       try {
-        const response = await axios.post(`${API_BASE_URL}/list/clear`)
+        const response = await axios.post(cartUrl('/list/clear'))
         setActiveList(response.data)
       } catch (error) {
         console.error('Error clearing list:', error)
@@ -450,7 +495,7 @@ function App() {
   const deleteHistoryEntry = async (historyId) => {
     if (window.confirm('Delete this shopping list from history?')) {
       try {
-        const response = await axios.delete(`${API_BASE_URL}/list/history/${historyId}`)
+        const response = await axios.delete(cartUrl(`/list/history/${historyId}`))
         setHistoryList(response.data)
       } catch (error) {
         console.error('Error deleting history entry:', error)
@@ -460,9 +505,7 @@ function App() {
 
   const deleteHistoryItem = async (historyId, itemId) => {
     try {
-      const response = await axios.delete(
-        `${API_BASE_URL}/list/history/${historyId}/items/${itemId}`
-      )
+      const response = await axios.delete(cartUrl(`/list/history/${historyId}/items/${itemId}`))
       setHistoryList(response.data)
     } catch (error) {
       console.error('Error deleting history item:', error)
@@ -472,7 +515,7 @@ function App() {
   const clearAllHistory = async () => {
     if (window.confirm('Delete ALL shopping history? This cannot be undone.')) {
       try {
-        await axios.delete(`${API_BASE_URL}/list/history`)
+        await axios.delete(cartUrl('/list/history'))
         setHistoryList([])
       } catch (error) {
         console.error('Error clearing history:', error)
@@ -497,11 +540,11 @@ function App() {
   const pendingCount = activeList?.items.filter(i => !i.purchased).length || 0
   const filteredItems = getFilteredItems()
 
-  // Check if item name already exists in active list
   const itemExists = activeList?.items.some(
     item => item.name.toLowerCase() === itemName.trim().toLowerCase()
   ) && itemName.trim() !== ''
 
+  // --- Login Screen ---
   if (!currentUser) {
     return (
       <div className={darkMode ? 'dark' : ''}>
@@ -514,7 +557,7 @@ function App() {
               : 'bg-white border-gray-200'
           }`}>
             <h1 className={`text-2xl md:text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Perry Shopping Cart
+              iShopCart
             </h1>
             <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-600'} ${connectionStatus === 'connected' ? 'mb-6' : 'mb-4'}`}>
               Enter your name to get started
@@ -610,7 +653,7 @@ function App() {
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
               >
-                {connectionStatus !== 'connected' ? 'Connecting...' : 'Log In'}
+                {connectionStatus !== 'connected' ? 'Connecting...' : 'Continue'}
               </button>
             </div>
 
@@ -630,6 +673,195 @@ function App() {
     )
   }
 
+  // --- Cart Selection Screen ---
+  if (!currentCart) {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <div className={`min-h-screen transition-colors duration-300 flex items-center justify-center ${
+          darkMode ? 'bg-slate-950' : 'bg-gray-50'
+        }`}>
+          <div className={`w-full max-w-md mx-4 p-6 md:p-8 rounded-xl border transition-colors duration-300 ${
+            darkMode
+              ? 'bg-slate-900 border-slate-800'
+              : 'bg-white border-gray-200'
+          }`}>
+            <h1 className={`text-2xl md:text-3xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Hi, {currentUser}!
+            </h1>
+            <p className={`text-sm mb-6 ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+              Choose your Cart
+            </p>
+
+            {cartMode === null && (
+              <div className="space-y-3">
+                <button
+                  onClick={() => { setCartMode('join'); setCartError(''); setCartCodeInput('') }}
+                  className={`w-full px-6 py-4 rounded-lg font-semibold text-sm transition-all duration-300 text-left flex items-center gap-3 ${
+                    darkMode
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  <span className="text-xl">🛒</span>
+                  <div>
+                    <div>Join a Cart</div>
+                    <div className="text-xs font-normal opacity-80">Enter a cart code to join an existing group</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setCartMode('create'); setCartError(''); setCartNameInput(''); setCartCodeInput('') }}
+                  className={`w-full px-6 py-4 rounded-lg font-semibold text-sm transition-all duration-300 text-left flex items-center gap-3 ${
+                    darkMode
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200'
+                  }`}
+                >
+                  <span className="text-xl">✨</span>
+                  <div>
+                    <div>Create a Cart</div>
+                    <div className={`text-xs font-normal ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>Start a new shared cart for your group</div>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {cartMode === 'join' && (
+              <div className="space-y-3">
+                <p className={`text-xs font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  Enter the cart code shared with you
+                </p>
+                <input
+                  type="text"
+                  value={cartCodeInput}
+                  onChange={(e) => setCartCodeInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleJoinCart()}
+                  placeholder="Cart code (e.g. perrycart)"
+                  autoFocus
+                  className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                />
+                {cartError && (
+                  <p className={`text-xs ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{cartError}</p>
+                )}
+                <button
+                  onClick={handleJoinCart}
+                  disabled={!cartCodeInput.trim()}
+                  className={`w-full px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                    !cartCodeInput.trim()
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : darkMode
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  Join Cart
+                </button>
+                <button
+                  onClick={() => { setCartMode(null); setCartError('') }}
+                  className={`w-full px-4 py-2 rounded-lg font-medium text-xs transition-all duration-300 ${
+                    darkMode
+                      ? 'text-slate-400 hover:bg-slate-800'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  ← Back
+                </button>
+              </div>
+            )}
+
+            {cartMode === 'create' && (
+              <div className="space-y-3">
+                <p className={`text-xs font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  Give your cart a name and a code to share
+                </p>
+                <input
+                  type="text"
+                  value={cartNameInput}
+                  onChange={(e) => setCartNameInput(e.target.value)}
+                  placeholder="Cart name (e.g. PerryCart)"
+                  autoFocus
+                  className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                />
+                <input
+                  type="text"
+                  value={cartCodeInput}
+                  onChange={(e) => setCartCodeInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleCreateCart()}
+                  placeholder="Cart code (e.g. perrycart)"
+                  className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                  } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
+                />
+                <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
+                  Share this code with your group so they can join
+                </p>
+                {cartError && (
+                  <p className={`text-xs ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{cartError}</p>
+                )}
+                <button
+                  onClick={handleCreateCart}
+                  disabled={!cartNameInput.trim() || !cartCodeInput.trim()}
+                  className={`w-full px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                    !cartNameInput.trim() || !cartCodeInput.trim()
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : darkMode
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  Create Cart
+                </button>
+                <button
+                  onClick={() => { setCartMode(null); setCartError('') }}
+                  className={`w-full px-4 py-2 rounded-lg font-medium text-xs transition-all duration-300 ${
+                    darkMode
+                      ? 'text-slate-400 hover:bg-slate-800'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  ← Back
+                </button>
+              </div>
+            )}
+
+            <div className={`mt-6 pt-4 border-t ${darkMode ? 'border-slate-800' : 'border-gray-200'}`}>
+              <button
+                onClick={handleLogout}
+                className={`text-xs transition-all duration-300 ${
+                  darkMode ? 'text-slate-500 hover:text-slate-400' : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                ← Not {currentUser}?
+              </button>
+            </div>
+
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`absolute top-4 right-4 md:top-6 md:right-6 p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
+                darkMode
+                  ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // --- Main App ---
   return (
     <div className={darkMode ? 'dark' : ''}>
       <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-gray-50'}`}>
@@ -766,9 +998,23 @@ function App() {
           <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-5">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex-1">
-                <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Perry Shopping Cart</h1>
-                <p className={`text-xs md:text-sm mt-1 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  Welcome, {currentUser}
+                <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  iShopCart
+                </h1>
+                <p className={`text-xs md:text-sm mt-1 flex items-center gap-2 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  <span>Welcome, {currentUser}</span>
+                  <span className={darkMode ? 'text-slate-600' : 'text-gray-300'}>·</span>
+                  <button
+                    onClick={handleSwitchCart}
+                    className={`font-medium transition-all duration-200 ${
+                      darkMode
+                        ? 'text-blue-400 hover:text-blue-300'
+                        : 'text-blue-600 hover:text-blue-700'
+                    }`}
+                    title="Switch to a different cart"
+                  >
+                    🛒 {currentCart.name} ⇄
+                  </button>
                 </p>
               </div>
               <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-end">
@@ -940,7 +1186,7 @@ function App() {
                       : 'border-transparent text-gray-500 hover:text-gray-600'
                 }`}
               >
-                Active List
+                List
               </button>
               <button
                 onClick={() => setActiveTab('history')}
@@ -1044,7 +1290,6 @@ function App() {
               ) : (
                 <div className="space-y-2">
                   {(() => {
-                    // Flatten all items and deduplicate by name (keep most recent)
                     const allItems = historyList.flatMap((entry) =>
                       entry.items.map((item) => ({
                         ...item,
@@ -1053,7 +1298,6 @@ function App() {
                       }))
                     )
 
-                    // Deduplicate by name (case-insensitive), keeping most recent
                     const uniqueItems = Array.from(
                       allItems.reduce((map, item) => {
                         const key = item.name.toLowerCase()
@@ -1065,14 +1309,12 @@ function App() {
                       }, new Map()).values()
                     )
 
-                    // Filter by search query
                     const filteredItems = historySearchQuery.trim()
                       ? uniqueItems.filter(item =>
                           item.name.toLowerCase().includes(historySearchQuery.toLowerCase())
                         )
                       : uniqueItems
 
-                    // Sort: items not in active list first, then by most recent
                     filteredItems.sort((a, b) => {
                       const aInList = activeList?.items.some(
                         activeItem => activeItem.name.toLowerCase() === a.name.toLowerCase()
@@ -1081,16 +1323,13 @@ function App() {
                         activeItem => activeItem.name.toLowerCase() === b.name.toLowerCase()
                       )
 
-                      // Prioritize items NOT in active list
                       if (aInList !== bInList) {
                         return aInList ? 1 : -1
                       }
 
-                      // Then sort by most recent
                       return new Date(b.completedAt) - new Date(a.completedAt)
                     })
 
-                    // Show message if search returns no results
                     if (filteredItems.length === 0) {
                       return (
                         <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
