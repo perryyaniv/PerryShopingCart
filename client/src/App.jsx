@@ -39,6 +39,9 @@ function App() {
   const [pastUsers, setPastUsers] = useState([])
   const [processingItems, setProcessingItems] = useState(new Set())
   const processingRef = useRef(new Set())
+  const [isAdding, setIsAdding] = useState(false)
+  const [processingHistoryItems, setProcessingHistoryItems] = useState(new Set())
+  const processingHistoryRef = useRef(new Set())
   const [showDemonicMessage, setShowDemonicMessage] = useState(false)
   // Opening screen selector: 1 = No Rest For The Wicked, 2 = Epic Fury
   // Add more options here as new screens are created
@@ -222,20 +225,19 @@ function App() {
   }
 
   const addItem = async () => {
-    if (!itemName.trim() || !currentUser) return
+    if (!itemName.trim() || !currentUser || isAdding) return
 
+    const trimmedName = itemName.trim()
+    const existingItem = activeList?.items.find(
+      item => item.name.toLowerCase() === trimmedName.toLowerCase()
+    )
+    if (existingItem) {
+      alert(`"${existingItem.name}" is already in your shopping list!`)
+      return
+    }
+
+    setIsAdding(true)
     try {
-      const trimmedName = itemName.trim()
-
-      const existingItem = activeList?.items.find(
-        item => item.name.toLowerCase() === trimmedName.toLowerCase()
-      )
-
-      if (existingItem) {
-        alert(`"${existingItem.name}" is already in your shopping list!`)
-        return
-      }
-
       const newItem = {
         name: trimmedName,
         quantity: parseInt(itemQuantity),
@@ -253,6 +255,8 @@ function App() {
       setItemComment('')
     } catch (error) {
       console.error('Error adding item:', error)
+    } finally {
+      setIsAdding(false)
     }
   }
 
@@ -314,20 +318,22 @@ function App() {
   }
 
   const deleteItem = async (itemId) => {
+    if (processingRef.current.has(itemId)) return
+    const item = activeList.items.find(i => i._id === itemId)
+    if (!item) return
+
+    const itemData = {
+      name: item.name,
+      quantity: item.quantity,
+      category: item.category,
+      addedBy: item.addedBy,
+      comment: item.comment || ''
+    }
+    const capturedCartId = currentCart._id
+
+    processingRef.current.add(itemId)
+    setProcessingItems(prev => new Set(prev).add(itemId))
     try {
-      const item = activeList.items.find(i => i._id === itemId)
-      if (!item) return
-
-      const itemData = {
-        name: item.name,
-        quantity: item.quantity,
-        category: item.category,
-        addedBy: item.addedBy,
-        comment: item.comment || ''
-      }
-
-      const capturedCartId = currentCart._id
-
       const response = await axios.delete(cartUrl(`/list/active/items/${itemId}`))
       setActiveList(response.data)
 
@@ -343,6 +349,9 @@ function App() {
       })
     } catch (error) {
       console.error('Error deleting item:', error)
+    } finally {
+      processingRef.current.delete(itemId)
+      setProcessingItems(prev => { const next = new Set(prev); next.delete(itemId); return next })
     }
   }
 
@@ -367,6 +376,9 @@ function App() {
   }
 
   const updateComment = async (itemId) => {
+    if (processingRef.current.has(itemId)) return
+    processingRef.current.add(itemId)
+    setProcessingItems(prev => new Set(prev).add(itemId))
     try {
       const response = await axios.patch(
         cartUrl(`/list/active/items/${itemId}`),
@@ -374,10 +386,12 @@ function App() {
       )
       setActiveList(response.data)
       cancelEditingComment()
-
       showNotification('Comment updated', { type: 'success', duration: 3000 })
     } catch (error) {
       console.error('Error updating comment:', error)
+    } finally {
+      processingRef.current.delete(itemId)
+      setProcessingItems(prev => { const next = new Set(prev); next.delete(itemId); return next })
     }
   }
 
@@ -387,7 +401,9 @@ function App() {
       alert('Please enter a valid quantity (1 or more)')
       return
     }
-
+    if (processingRef.current.has(itemId)) return
+    processingRef.current.add(itemId)
+    setProcessingItems(prev => new Set(prev).add(itemId))
     try {
       const response = await axios.patch(
         cartUrl(`/list/active/items/${itemId}`),
@@ -397,6 +413,9 @@ function App() {
       cancelEditingQuantity()
     } catch (error) {
       console.error('Error updating quantity:', error)
+    } finally {
+      processingRef.current.delete(itemId)
+      setProcessingItems(prev => { const next = new Set(prev); next.delete(itemId); return next })
     }
   }
 
@@ -458,29 +477,32 @@ function App() {
   }
 
   const addItemFromHistory = async (historyItem) => {
+    if (processingHistoryRef.current.has(historyItem._id)) return
+    const trimmedName = historyItem.name.trim()
+    const existingItem = activeList?.items.find(
+      item => item.name.toLowerCase() === trimmedName.toLowerCase()
+    )
+    if (existingItem) {
+      alert(`"${existingItem.name}" is already in your shopping list!`)
+      return
+    }
+
+    processingHistoryRef.current.add(historyItem._id)
+    setProcessingHistoryItems(prev => new Set(prev).add(historyItem._id))
     try {
-      const trimmedName = historyItem.name.trim()
-
-      const existingItem = activeList?.items.find(
-        item => item.name.toLowerCase() === trimmedName.toLowerCase()
-      )
-
-      if (existingItem) {
-        alert(`"${existingItem.name}" is already in your shopping list!`)
-        return
-      }
-
       const newItem = {
         name: trimmedName,
         quantity: historyItem.quantity,
         category: historyItem.category,
         addedBy: currentUser
       }
-
       const response = await axios.post(cartUrl('/list/active/items'), newItem)
       setActiveList(response.data)
     } catch (error) {
       console.error('Error adding item from history:', error)
+    } finally {
+      processingHistoryRef.current.delete(historyItem._id)
+      setProcessingHistoryItems(prev => { const next = new Set(prev); next.delete(historyItem._id); return next })
     }
   }
 
@@ -1163,9 +1185,9 @@ function App() {
 
               <button
                 onClick={addItem}
-                disabled={itemExists}
-                className={`w-full sm:w-auto px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
-                  itemExists
+                disabled={itemExists || isAdding}
+                className={`w-full sm:w-auto px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-semibold text-sm transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2 ${
+                  itemExists || isAdding
                     ? darkMode
                       ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -1174,7 +1196,8 @@ function App() {
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
               >
-                Add
+                {isAdding && <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />}
+                {isAdding ? 'Adding...' : 'Add'}
               </button>
             </div>
           </div>
@@ -1235,10 +1258,11 @@ function App() {
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   <button
                     onClick={() => archiveList()}
+                    disabled={!activeList?.items.length}
                     className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
-                      darkMode
-                        ? 'bg-green-900/20 text-green-400 hover:bg-green-900/30'
-                        : 'bg-green-100 text-green-600 hover:bg-green-200'
+                      !activeList?.items.length
+                        ? darkMode ? 'bg-green-900/10 text-green-900 cursor-not-allowed' : 'bg-green-50 text-green-300 cursor-not-allowed'
+                        : darkMode ? 'bg-green-900/20 text-green-400 hover:bg-green-900/30' : 'bg-green-100 text-green-600 hover:bg-green-200'
                     }`}
                   >
                     Archive List
@@ -1246,10 +1270,11 @@ function App() {
 
                   <button
                     onClick={() => clearList()}
+                    disabled={!activeList?.items.length}
                     className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all duration-300 ${
-                      darkMode
-                        ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30'
-                        : 'bg-red-100 text-red-600 hover:bg-red-200'
+                      !activeList?.items.length
+                        ? darkMode ? 'bg-red-900/10 text-red-900 cursor-not-allowed' : 'bg-red-50 text-red-300 cursor-not-allowed'
+                        : darkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30' : 'bg-red-100 text-red-600 hover:bg-red-200'
                     }`}
                   >
                     Clear List
@@ -1409,9 +1434,9 @@ function App() {
                           <div className="flex gap-2 w-full sm:w-auto">
                             <button
                               onClick={() => addItemFromHistory(item)}
-                              disabled={existsInActiveList}
-                              className={`flex-1 sm:flex-none px-3 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all duration-300 ${
-                                existsInActiveList
+                              disabled={existsInActiveList || processingHistoryItems.has(item._id)}
+                              className={`flex-1 sm:flex-none px-3 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                                existsInActiveList || processingHistoryItems.has(item._id)
                                   ? darkMode
                                     ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -1420,7 +1445,10 @@ function App() {
                                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                               }`}
                             >
-                              Add
+                              {processingHistoryItems.has(item._id)
+                                ? <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                : 'Add'
+                              }
                             </button>
                             <button
                               onClick={() => deleteHistoryItem(item.entryId, item._id)}
@@ -1603,20 +1631,25 @@ function App() {
                                       />
                                       <button
                                         onClick={() => updateQuantity(item._id)}
-                                        className={`px-2 py-1 rounded font-medium text-xs ${
+                                        disabled={processingItems.has(item._id)}
+                                        className={`px-2 py-1 rounded font-medium text-xs flex items-center justify-center ${
                                           darkMode
-                                            ? 'bg-green-600 hover:bg-green-500 text-white'
-                                            : 'bg-green-600 hover:bg-green-700 text-white'
+                                            ? 'bg-green-600 hover:bg-green-500 text-white disabled:opacity-50'
+                                            : 'bg-green-600 hover:bg-green-700 text-white disabled:opacity-50'
                                         }`}
                                       >
-                                        ✓
+                                        {processingItems.has(item._id)
+                                          ? <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                          : '✓'
+                                        }
                                       </button>
                                       <button
                                         onClick={cancelEditingQuantity}
+                                        disabled={processingItems.has(item._id)}
                                         className={`px-2 py-1 rounded font-medium text-xs ${
                                           darkMode
-                                            ? 'bg-red-600 hover:bg-red-500 text-white'
-                                            : 'bg-red-600 hover:bg-red-700 text-white'
+                                            ? 'bg-red-600 hover:bg-red-500 text-white disabled:opacity-50'
+                                            : 'bg-red-600 hover:bg-red-700 text-white disabled:opacity-50'
                                         }`}
                                       >
                                         ✕
@@ -1671,20 +1704,26 @@ function App() {
                                     <div className="flex gap-2 mt-2">
                                       <button
                                         onClick={() => updateComment(item._id)}
-                                        className={`px-3 py-1.5 rounded-lg font-medium text-xs ${
+                                        disabled={processingItems.has(item._id)}
+                                        className={`px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1.5 ${
                                           darkMode
-                                            ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                            ? 'bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50'
+                                            : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50'
                                         }`}
                                       >
+                                        {processingItems.has(item._id)
+                                          ? <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                          : null
+                                        }
                                         Save
                                       </button>
                                       <button
                                         onClick={cancelEditingComment}
+                                        disabled={processingItems.has(item._id)}
                                         className={`px-3 py-1.5 rounded-lg font-medium text-xs ${
                                           darkMode
-                                            ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                            ? 'bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-50'
+                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50'
                                         }`}
                                       >
                                         Cancel
@@ -1698,14 +1737,17 @@ function App() {
                                 {/* Comment button */}
                                 <button
                                   onClick={() => startEditingComment(item._id, item.comment)}
+                                  disabled={processingItems.has(item._id)}
                                   className={`p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
-                                    item.comment
-                                      ? darkMode
-                                        ? 'text-blue-400 bg-blue-900/20 hover:bg-blue-900/30'
-                                        : 'text-blue-600 bg-blue-100 hover:bg-blue-200'
-                                      : darkMode
-                                        ? 'text-slate-400 hover:bg-slate-800'
-                                        : 'text-gray-400 hover:bg-gray-100'
+                                    processingItems.has(item._id)
+                                      ? 'opacity-30 cursor-not-allowed'
+                                      : item.comment
+                                        ? darkMode
+                                          ? 'text-blue-400 bg-blue-900/20 hover:bg-blue-900/30'
+                                          : 'text-blue-600 bg-blue-100 hover:bg-blue-200'
+                                        : darkMode
+                                          ? 'text-slate-400 hover:bg-slate-800'
+                                          : 'text-gray-400 hover:bg-gray-100'
                                   }`}
                                   title={item.comment ? 'Edit comment' : 'Add comment'}
                                 >
@@ -1715,13 +1757,19 @@ function App() {
                                 {/* Delete button */}
                                 <button
                                   onClick={() => deleteItem(item._id)}
-                                  className={`p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm ${
-                                    darkMode
-                                      ? 'text-red-400 hover:bg-red-900/20'
-                                      : 'text-red-600 hover:bg-red-100'
+                                  disabled={processingItems.has(item._id)}
+                                  className={`p-1.5 md:p-2 rounded-lg font-medium transition-all duration-300 text-sm flex items-center justify-center ${
+                                    processingItems.has(item._id)
+                                      ? 'opacity-30 cursor-not-allowed'
+                                      : darkMode
+                                        ? 'text-red-400 hover:bg-red-900/20'
+                                        : 'text-red-600 hover:bg-red-100'
                                   }`}
                                 >
-                                  ✕
+                                  {processingItems.has(item._id) && !editingQuantity && !editingComment
+                                    ? <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                    : '✕'
+                                  }
                                 </button>
                               </div>
                             </li>
