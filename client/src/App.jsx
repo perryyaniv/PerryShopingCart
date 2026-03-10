@@ -59,6 +59,11 @@ function App() {
   // Helper: build a URL scoped to the current cart
   const cartUrl = (path) => `${API_BASE_URL}/cart/${currentCart._id}${path}`
 
+  // Initial ping to establish connection status (needed when no cart is loaded yet)
+  useEffect(() => {
+    axios.get(API_BASE_URL + '/').catch(() => {})
+  }, [])
+
   // Load persisted data on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('savedCart')
