@@ -3,7 +3,9 @@
     "allow": [
       "Bash(node:*)",
       "Bash(netstat:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find /c/Development/Projects/todo-app -not -path */node_modules/* -type f)",
+      "Bash(npm run:*)"
     ]
   }
 }

@@ -1,23 +1,27 @@
+import { useTranslation } from 'react-i18next'
+
 /**
  * ConnectionIndicator Component
  * Displays the current server connection status with an icon
  * Shows different icons and colors based on connection state
  */
 export default function ConnectionIndicator({ status, darkMode, serverUrl }) {
+  const { t } = useTranslation()
+
   // Configuration for each connection state
   const statusConfig = {
     connected: {
-      text: 'Connected',
+      text: t('connection.connected'),
       bgColor: 'bg-green-500',
       ringColor: 'ring-green-500/30'
     },
     disconnected: {
-      text: 'Disconnected',
+      text: t('connection.disconnected'),
       bgColor: 'bg-red-500',
       ringColor: 'ring-red-500/30'
     },
     checking: {
-      text: 'Checking connection...',
+      text: t('connection.checking'),
       bgColor: 'bg-yellow-500',
       ringColor: 'ring-yellow-500/30',
       animate: true

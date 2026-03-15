@@ -1,0 +1,109 @@
+{
+  "login": {
+    "subtitle": "Enter your name to get started",
+    "connectingServer": "Connecting to server...",
+    "serverUnavailable": "Server unavailable. Retrying...",
+    "placeholder": {
+      "selectName": "Select or type your name",
+      "name": "Your name"
+    },
+    "clearHistory": "Clear User History",
+    "connecting": "Connecting...",
+    "continue": "Continue"
+  },
+  "cart": {
+    "greeting": "Hi, {{name}}!",
+    "chooseCart": "Choose your Cart",
+    "back": "← Back",
+    "notYou": "← Not {{name}}?",
+    "join": {
+      "button": "Join a Cart",
+      "subtitle": "Enter a cart code to join an existing group",
+      "instruction": "Enter the cart code shared with you",
+      "placeholder": "Cart code (e.g. MyFamilyCart)",
+      "submit": "Join Cart",
+      "error": "Cart not found"
+    },
+    "create": {
+      "button": "Create a Cart",
+      "subtitle": "Start a new shared cart for your group",
+      "instruction": "Give your cart a name and a code to share",
+      "namePlaceholder": "Cart name (e.g. PerryCart)",
+      "codePlaceholder": "Cart code (e.g. perrycart)",
+      "shareHint": "Share this code with your group so they can join",
+      "submit": "Create Cart"
+    }
+  },
+  "header": {
+    "welcome": "Welcome, {{name}}",
+    "switchCart": "Switch to a different cart",
+    "logout": "Logout"
+  },
+  "stats": {
+    "itemsToBuy": "Items to Buy"
+  },
+  "addItem": {
+    "title": "Add New Item",
+    "placeholder": {
+      "name": "Item name",
+      "qty": "Qty",
+      "comment": "Add a comment (optional)"
+    },
+    "adding": "Adding...",
+    "add": "Add",
+    "alreadyInList": "This item is already in your list"
+  },
+  "category": {
+    "general": "General",
+    "fruitsVegetables": "Fruits & Vegetables",
+    "fruitsVeg": "Fruits & Veg",
+    "bakery": "Bakery",
+    "dairy": "Dairy",
+    "meat": "Meat",
+    "frozen": "Frozen",
+    "pantry": "Pantry"
+  },
+  "list": {
+    "tab": "List",
+    "history": "History",
+    "searchPlaceholder": "Search items...",
+    "archiveList": "Archive List",
+    "clearList": "Clear List",
+    "searchHistoryPlaceholder": "Search archived items...",
+    "clearHistory": "Clear",
+    "noArchived": "No archived items found",
+    "noMatchSearch": "No items match your search",
+    "noMatchCriteria": "No items match your criteria",
+    "noItems": "No items yet. Add one to get started",
+    "inList": "In list",
+    "qty": "Qty: {{qty}}"
+  },
+  "item": {
+    "addNote": "Add a note (brand, size, location...)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "editComment": "Edit comment",
+    "addComment": "Add comment"
+  },
+  "connection": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "checking": "Checking connection..."
+  },
+  "notifications": {
+    "markedAsPurchased": "\"{{name}}\" marked as purchased",
+    "deleted": "Deleted \"{{name}}\"",
+    "commentUpdated": "Comment updated"
+  },
+  "alerts": {
+    "alreadyInList": "\"{{name}}\" is already in your shopping list!",
+    "invalidQuantity": "Please enter a valid quantity (1 or more)",
+    "clearList": "Clear the entire list?",
+    "deleteHistory": "Delete this shopping list from history?",
+    "clearAllHistory": "Delete ALL shopping history? This cannot be undone."
+  },
+  "language": {
+    "en": "EN",
+    "he": "עב"
+  }
+}

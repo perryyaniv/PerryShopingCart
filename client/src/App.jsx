@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import './App.css'
+import { useTranslation } from 'react-i18next'
 import useConnectionStatus from './hooks/useConnectionStatus'
 import ConnectionIndicator from './components/ConnectionIndicator'
 import ToastContainer from './components/ToastContainer'
@@ -11,6 +12,7 @@ import useSocket from './hooks/useSocket'
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://perry-shopping-server.onrender.com';
 
 function App() {
+  const { t, i18n } = useTranslation()
   const socket = useSocket(API_BASE_URL)
   const { showNotification } = useNotification()
   const { recordAction, performUndo } = useUndo()
@@ -33,6 +35,7 @@ function App() {
     const saved = localStorage.getItem('darkMode')
     return saved !== null ? saved === 'true' : true
   })
+  const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en')
   const [searchQuery, setSearchQuery] = useState('')
   const [historySearchQuery, setHistorySearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('active')
@@ -61,6 +64,27 @@ function App() {
     'Frozen',
     'Pantry'
   ])
+
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang)
+    i18n.changeLanguage(lang)
+    localStorage.setItem('language', lang)
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr'
+    document.documentElement.lang = lang
+  }
+
+  const getCategoryLabel = (category) => {
+    const map = {
+      'General': t('category.general'),
+      'Fruits & Vegetables': t('category.fruitsVegetables'),
+      'Bakery': t('category.bakery'),
+      'Dairy': t('category.dairy'),
+      'Meat': t('category.meat'),
+      'Frozen': t('category.frozen'),
+      'Pantry': t('category.pantry'),
+    }
+    return map[category] || category
+  }
 
   // Helper: build a URL scoped to the current cart
   const cartUrl = (path) => `${API_BASE_URL}/cart/${currentCart._id}${path}`
@@ -232,7 +256,7 @@ function App() {
       item => item.name.toLowerCase() === trimmedName.toLowerCase()
     )
     if (existingItem) {
-      alert(`"${existingItem.name}" is already in your shopping list!`)
+      alert(t('alerts.alreadyInList', { name: existingItem.name }))
       return
     }
 
@@ -298,7 +322,7 @@ function App() {
         fetchHistory()
       })
 
-      showNotification(`"${itemData.name}" marked as purchased`, {
+      showNotification(t('notifications.markedAsPurchased', { name: itemData.name }), {
         type: 'success',
         showUndo: true,
         onUndo: () => performUndo(undoId),
@@ -342,7 +366,7 @@ function App() {
         fetchActiveList()
       })
 
-      showNotification(`Deleted "${itemData.name}"`, {
+      showNotification(t('notifications.deleted', { name: itemData.name }), {
         type: 'info',
         showUndo: true,
         onUndo: () => performUndo(undoId)
@@ -386,7 +410,7 @@ function App() {
       )
       setActiveList(response.data)
       cancelEditingComment()
-      showNotification('Comment updated', { type: 'success', duration: 3000 })
+      showNotification(t('notifications.commentUpdated'), { type: 'success', duration: 3000 })
     } catch (error) {
       console.error('Error updating comment:', error)
     } finally {
@@ -398,7 +422,7 @@ function App() {
   const updateQuantity = async (itemId) => {
     const newQuantity = parseInt(editQuantityValue)
     if (isNaN(newQuantity) || newQuantity < 1) {
-      alert('Please enter a valid quantity (1 or more)')
+      alert(t('alerts.invalidQuantity'))
       return
     }
     if (processingRef.current.has(itemId)) return
@@ -483,7 +507,7 @@ function App() {
       item => item.name.toLowerCase() === trimmedName.toLowerCase()
     )
     if (existingItem) {
-      alert(`"${existingItem.name}" is already in your shopping list!`)
+      alert(t('alerts.alreadyInList', { name: existingItem.name }))
       return
     }
 
@@ -517,7 +541,7 @@ function App() {
   }
 
   const clearList = async () => {
-    if (window.confirm('Clear the entire list?')) {
+    if (window.confirm(t('alerts.clearList'))) {
       try {
         const response = await axios.post(cartUrl('/list/clear'))
         setActiveList(response.data)
@@ -528,7 +552,7 @@ function App() {
   }
 
   const deleteHistoryEntry = async (historyId) => {
-    if (window.confirm('Delete this shopping list from history?')) {
+    if (window.confirm(t('alerts.deleteHistory'))) {
       try {
         const response = await axios.delete(cartUrl(`/list/history/${historyId}`))
         setHistoryList(response.data)
@@ -548,7 +572,7 @@ function App() {
   }
 
   const clearAllHistory = async () => {
-    if (window.confirm('Delete ALL shopping history? This cannot be undone.')) {
+    if (window.confirm(t('alerts.clearAllHistory'))) {
       try {
         await axios.delete(cartUrl('/list/history'))
         setHistoryList([])
@@ -595,7 +619,7 @@ function App() {
               iShopCart
             </h1>
             <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-600'} ${connectionStatus === 'connected' ? 'mb-6' : 'mb-4'}`}>
-              Enter your name to get started
+              {t('login.subtitle')}
             </p>
 
             {connectionStatus !== 'connected' && (
@@ -611,7 +635,7 @@ function App() {
                   <span className={`text-xs font-medium ${
                     darkMode ? 'text-slate-300' : 'text-amber-800'
                   }`}>
-                    {connectionStatus === 'checking' ? 'Connecting to server...' : 'Server unavailable. Retrying...'}
+                    {connectionStatus === 'checking' ? t('login.connectingServer') : t('login.serverUnavailable')}
                   </span>
                 </div>
                 <div className={`connecting-progress-bar ${
@@ -634,7 +658,7 @@ function App() {
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && connectionStatus === 'connected' && handleLoginUser()}
-                    placeholder="Select or type your name"
+                    placeholder={t('login.placeholder.selectName')}
                     list="usersList"
                     className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                       darkMode
@@ -659,7 +683,7 @@ function App() {
                         : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                     }`}
                   >
-                    Clear User History
+                    {t('login.clearHistory')}
                   </button>
                 </>
               ) : (
@@ -668,7 +692,7 @@ function App() {
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && connectionStatus === 'connected' && handleLoginUser()}
-                  placeholder="Your name"
+                  placeholder={t('login.placeholder.name')}
                   className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
@@ -688,20 +712,26 @@ function App() {
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
               >
-                {connectionStatus !== 'connected' ? 'Connecting...' : 'Continue'}
+                {connectionStatus !== 'connected' ? t('login.connecting') : t('login.continue')}
               </button>
             </div>
 
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`absolute top-4 right-4 md:top-6 md:right-6 p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
-                darkMode
-                  ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+              <div className={`flex rounded-lg overflow-hidden border text-xs font-semibold ${darkMode ? 'border-slate-700' : 'border-gray-200'}`}>
+                <button onClick={() => handleLanguageChange('en')} className={`px-2 py-1 transition-colors ${language === 'en' ? 'bg-blue-600 text-white' : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>EN</button>
+                <button onClick={() => handleLanguageChange('he')} className={`px-2 py-1 transition-colors ${language === 'he' ? 'bg-blue-600 text-white' : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>עב</button>
+              </div>
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
+                  darkMode
+                    ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -721,10 +751,10 @@ function App() {
               : 'bg-white border-gray-200'
           }`}>
             <h1 className={`text-2xl md:text-3xl font-bold mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Hi, {currentUser}!
+              {t('cart.greeting', { name: currentUser })}
             </h1>
             <p className={`text-sm mb-6 ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-              Choose your Cart
+              {t('cart.chooseCart')}
             </p>
 
             {cartMode === null && (
@@ -739,8 +769,8 @@ function App() {
                 >
                   <span className="text-xl">🛒</span>
                   <div>
-                    <div>Join a Cart</div>
-                    <div className="text-xs font-normal opacity-80">Enter a cart code to join an existing group</div>
+                    <div>{t('cart.join.button')}</div>
+                    <div className="text-xs font-normal opacity-80">{t('cart.join.subtitle')}</div>
                   </div>
                 </button>
 
@@ -754,8 +784,8 @@ function App() {
                 >
                   <span className="text-xl">✨</span>
                   <div>
-                    <div>Create a Cart</div>
-                    <div className={`text-xs font-normal ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>Start a new shared cart for your group</div>
+                    <div>{t('cart.create.button')}</div>
+                    <div className={`text-xs font-normal ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>{t('cart.create.subtitle')}</div>
                   </div>
                 </button>
               </div>
@@ -764,14 +794,14 @@ function App() {
             {cartMode === 'join' && (
               <div className="space-y-3">
                 <p className={`text-xs font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  Enter the cart code shared with you
+                  {t('cart.join.instruction')}
                 </p>
                 <input
                   type="text"
                   value={cartCodeInput}
                   onChange={(e) => setCartCodeInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleJoinCart()}
-                  placeholder="Cart code (e.g. MyFamilyCart)"
+                  placeholder={t('cart.join.placeholder')}
                   autoFocus
                   className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
@@ -793,7 +823,7 @@ function App() {
                         : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
-                  Join Cart
+                  {t('cart.join.submit')}
                 </button>
                 <button
                   onClick={() => { setCartMode(null); setCartError('') }}
@@ -803,7 +833,7 @@ function App() {
                       : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
-                  ← Back
+                  {t('cart.back')}
                 </button>
               </div>
             )}
@@ -811,13 +841,13 @@ function App() {
             {cartMode === 'create' && (
               <div className="space-y-3">
                 <p className={`text-xs font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  Give your cart a name and a code to share
+                  {t('cart.create.instruction')}
                 </p>
                 <input
                   type="text"
                   value={cartNameInput}
                   onChange={(e) => setCartNameInput(e.target.value)}
-                  placeholder="Cart name (e.g. PerryCart)"
+                  placeholder={t('cart.create.namePlaceholder')}
                   autoFocus
                   className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
@@ -830,7 +860,7 @@ function App() {
                   value={cartCodeInput}
                   onChange={(e) => setCartCodeInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleCreateCart()}
-                  placeholder="Cart code (e.g. perrycart)"
+                  placeholder={t('cart.create.codePlaceholder')}
                   className={`w-full px-4 py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
@@ -838,7 +868,7 @@ function App() {
                   } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
                 />
                 <p className={`text-xs ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                  Share this code with your group so they can join
+                  {t('cart.create.shareHint')}
                 </p>
                 {cartError && (
                   <p className={`text-xs ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{cartError}</p>
@@ -854,7 +884,7 @@ function App() {
                         : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
-                  Create Cart
+                  {t('cart.create.submit')}
                 </button>
                 <button
                   onClick={() => { setCartMode(null); setCartError('') }}
@@ -864,7 +894,7 @@ function App() {
                       : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
-                  ← Back
+                  {t('cart.back')}
                 </button>
               </div>
             )}
@@ -876,20 +906,26 @@ function App() {
                   darkMode ? 'text-slate-500 hover:text-slate-400' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                ← Not {currentUser}?
+                {t('cart.notYou', { name: currentUser })}
               </button>
             </div>
 
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`absolute top-4 right-4 md:top-6 md:right-6 p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
-                darkMode
-                  ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2">
+              <div className={`flex rounded-lg overflow-hidden border text-xs font-semibold ${darkMode ? 'border-slate-700' : 'border-gray-200'}`}>
+                <button onClick={() => handleLanguageChange('en')} className={`px-2 py-1 transition-colors ${language === 'en' ? 'bg-blue-600 text-white' : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>EN</button>
+                <button onClick={() => handleLanguageChange('he')} className={`px-2 py-1 transition-colors ${language === 'he' ? 'bg-blue-600 text-white' : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>עב</button>
+              </div>
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
+                  darkMode
+                    ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1037,7 +1073,7 @@ function App() {
                   iShopCart
                 </h1>
                 <p className={`text-xs md:text-sm mt-1 flex items-center gap-2 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  <span>Welcome, {currentUser}</span>
+                  <span>{t('header.welcome', { name: currentUser })}</span>
                   <span className={darkMode ? 'text-slate-600' : 'text-gray-300'}>·</span>
                   <button
                     onClick={handleSwitchCart}
@@ -1046,7 +1082,7 @@ function App() {
                         ? 'text-blue-400 hover:text-blue-300'
                         : 'text-blue-600 hover:text-blue-700'
                     }`}
-                    title="Switch to a different cart"
+                    title={t('header.switchCart')}
                   >
                     🛒 {currentCart.name} ⇄
                   </button>
@@ -1054,6 +1090,10 @@ function App() {
               </div>
               <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-end">
                 <ConnectionIndicator status={connectionStatus} darkMode={darkMode} serverUrl={API_BASE_URL} />
+                <div className={`flex rounded-lg overflow-hidden border text-xs font-semibold ${darkMode ? 'border-slate-700' : 'border-gray-200'}`}>
+                  <button onClick={() => handleLanguageChange('en')} className={`px-2 py-1 transition-colors ${language === 'en' ? 'bg-blue-600 text-white' : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>EN</button>
+                  <button onClick={() => handleLanguageChange('he')} className={`px-2 py-1 transition-colors ${language === 'he' ? 'bg-blue-600 text-white' : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>עב</button>
+                </div>
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
@@ -1072,7 +1112,7 @@ function App() {
                       : 'bg-red-100 text-red-600 hover:bg-red-200'
                   }`}
                 >
-                  Logout
+                  {t('header.logout')}
                 </button>
               </div>
             </div>
@@ -1089,7 +1129,7 @@ function App() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-xs md:text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-                  Items to Buy
+                  {t('stats.itemsToBuy')}
                 </p>
                 <p className={`text-2xl md:text-3xl font-bold mt-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   {pendingCount}
@@ -1108,7 +1148,7 @@ function App() {
               : 'bg-white border-gray-200'
           }`}>
             <h2 className={`text-xs md:text-sm font-semibold mb-3 md:mb-4 ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
-              Add New Item
+              {t('addItem.title')}
             </h2>
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 md:gap-3 items-stretch sm:items-end">
               <div className="flex-1 min-w-[150px]">
@@ -1117,7 +1157,7 @@ function App() {
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !itemExists && addItem()}
-                  placeholder="Item name"
+                  placeholder={t('addItem.placeholder.name')}
                   className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm ${
                     itemExists
                       ? darkMode
@@ -1132,7 +1172,7 @@ function App() {
                 />
                 {itemExists && (
                   <p className={`text-xs mt-1 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
-                    This item is already in your list
+                    {t('addItem.alreadyInList')}
                   </p>
                 )}
               </div>
@@ -1143,7 +1183,7 @@ function App() {
                   value={itemQuantity}
                   onChange={(e) => setItemQuantity(e.target.value)}
                   min="1"
-                  placeholder="Qty"
+                  placeholder={t('addItem.placeholder.qty')}
                   className={`w-16 sm:w-20 px-2 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700 text-white focus:border-blue-500'
@@ -1160,13 +1200,13 @@ function App() {
                       : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500'
                   } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
                 >
-                  <option value="General">General</option>
-                  <option value="Fruits & Vegetables">Fruits & Veg</option>
-                  <option value="Bakery">Bakery</option>
-                  <option value="Dairy">Dairy</option>
-                  <option value="Meat">Meat</option>
-                  <option value="Frozen">Frozen</option>
-                  <option value="Pantry">Pantry</option>
+                  <option value="General">{t('category.general')}</option>
+                  <option value="Fruits & Vegetables">{t('category.fruitsVeg')}</option>
+                  <option value="Bakery">{t('category.bakery')}</option>
+                  <option value="Dairy">{t('category.dairy')}</option>
+                  <option value="Meat">{t('category.meat')}</option>
+                  <option value="Frozen">{t('category.frozen')}</option>
+                  <option value="Pantry">{t('category.pantry')}</option>
                 </select>
               </div>
 
@@ -1175,7 +1215,7 @@ function App() {
                 value={itemComment}
                 onChange={(e) => setItemComment(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !itemExists && addItem()}
-                placeholder="Add a comment (optional)"
+                placeholder={t('addItem.placeholder.comment')}
                 className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm ${
                   darkMode
                     ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
@@ -1197,7 +1237,7 @@ function App() {
                 } focus:outline-none focus:ring-4 focus:ring-blue-500/30`}
               >
                 {isAdding && <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />}
-                {isAdding ? 'Adding...' : 'Add'}
+                {isAdding ? t('addItem.adding') : t('addItem.add')}
               </button>
             </div>
           </div>
@@ -1222,7 +1262,7 @@ function App() {
                       : 'border-transparent text-gray-500 hover:text-gray-600'
                 }`}
               >
-                List
+                {t('list.tab')}
               </button>
               <button
                 onClick={() => setActiveTab('history')}
@@ -1236,7 +1276,7 @@ function App() {
                       : 'border-transparent text-gray-500 hover:text-gray-600'
                 }`}
               >
-                History
+                {t('list.history')}
               </button>
             </div>
 
@@ -1247,7 +1287,7 @@ function App() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search items..."
+                  placeholder={t('list.searchPlaceholder')}
                   className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm mb-3 md:mb-4 ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
@@ -1265,7 +1305,7 @@ function App() {
                         : darkMode ? 'bg-green-900/20 text-green-400 hover:bg-green-900/30' : 'bg-green-100 text-green-600 hover:bg-green-200'
                     }`}
                   >
-                    Archive List
+                    {t('list.archiveList')}
                   </button>
 
                   <button
@@ -1277,7 +1317,7 @@ function App() {
                         : darkMode ? 'bg-red-900/20 text-red-400 hover:bg-red-900/30' : 'bg-red-100 text-red-600 hover:bg-red-200'
                     }`}
                   >
-                    Clear List
+                    {t('list.clearList')}
                   </button>
                 </div>
               </>
@@ -1290,7 +1330,7 @@ function App() {
                   type="text"
                   value={historySearchQuery}
                   onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  placeholder="Search archived items..."
+                  placeholder={t('list.searchHistoryPlaceholder')}
                   className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg border transition-all duration-300 text-sm mb-3 md:mb-4 ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500'
@@ -1307,7 +1347,7 @@ function App() {
                         : 'bg-red-100 text-red-600 hover:bg-red-200'
                     }`}
                   >
-                    Clear
+                    {t('list.clearHistory')}
                   </button>
                 </div>
               </>
@@ -1323,7 +1363,7 @@ function App() {
             }`}>
               {historyList.length === 0 ? (
                 <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  No archived items found
+                  {t('list.noArchived')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -1371,7 +1411,7 @@ function App() {
                     if (filteredItems.length === 0) {
                       return (
                         <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                          No items match your search
+                          {t('list.noMatchSearch')}
                         </p>
                       )
                     }
@@ -1400,7 +1440,7 @@ function App() {
                                     ? 'bg-green-900/30 text-green-400'
                                     : 'bg-green-100 text-green-700'
                                 }`}>
-                                  In list
+                                  {t('list.inList')}
                                 </span>
                               )}
                             </div>
@@ -1410,21 +1450,21 @@ function App() {
                                   ? 'bg-blue-900/30 text-blue-300'
                                   : 'bg-blue-100 text-blue-700'
                               }`}>
-                                Qty: {item.quantity}
+                                {t('list.qty', { qty: item.quantity })}
                               </span>
                               <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded ${
                                 darkMode
                                   ? 'bg-slate-700 text-slate-300'
                                   : 'bg-gray-200 text-gray-700'
                               }`}>
-                                {item.category}
+                                {getCategoryLabel(item.category)}
                               </span>
                               <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded text-xs ${
                                 darkMode
                                   ? 'bg-slate-700 text-slate-400'
                                   : 'bg-gray-300 text-gray-600'
                               }`}>
-                                {new Date(item.completedAt).toLocaleDateString('en-US', {
+                                {new Date(item.completedAt).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', {
                                   month: 'short',
                                   day: 'numeric'
                                 })}
@@ -1447,7 +1487,7 @@ function App() {
                             >
                               {processingHistoryItems.has(item._id)
                                 ? <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                : 'Add'
+                                : t('addItem.add')
                               }
                             </button>
                             <button
@@ -1478,9 +1518,7 @@ function App() {
                 : 'bg-white border-gray-200'
             }`}>
               <p className={`text-sm md:text-base font-medium px-4 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                {searchQuery
-                  ? 'No items match your criteria'
-                  : 'No items yet. Add one to get started'}
+                {searchQuery ? t('list.noMatchCriteria') : t('list.noItems')}
               </p>
             </div>
           ) : (
@@ -1518,7 +1556,7 @@ function App() {
                             ▶
                           </button>
                           <h3 className={`text-sm md:text-base font-semibold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {category}
+                            {getCategoryLabel(category)}
                           </h3>
                           <span className={`text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded-full flex-shrink-0 ${
                             darkMode
@@ -1664,7 +1702,7 @@ function App() {
                                           : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                                       }`}
                                     >
-                                      Qty: {item.quantity}
+                                      {t('list.qty', { qty: item.quantity })}
                                     </button>
                                   )}
                                 </div>
@@ -1692,7 +1730,7 @@ function App() {
                                         }
                                       }}
                                       onBlur={() => updateComment(item._id)}
-                                      placeholder="Add a note (brand, size, location...)"
+                                      placeholder={t('item.addNote')}
                                       autoFocus
                                       rows={2}
                                       className={`w-full px-3 py-2 rounded-lg border text-sm resize-none ${
@@ -1715,7 +1753,7 @@ function App() {
                                           ? <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                           : null
                                         }
-                                        Save
+                                        {t('item.save')}
                                       </button>
                                       <button
                                         onClick={cancelEditingComment}
@@ -1726,7 +1764,7 @@ function App() {
                                             : 'bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50'
                                         }`}
                                       >
-                                        Cancel
+                                        {t('item.cancel')}
                                       </button>
                                     </div>
                                   </div>
@@ -1749,7 +1787,7 @@ function App() {
                                           ? 'text-slate-400 hover:bg-slate-800'
                                           : 'text-gray-400 hover:bg-gray-100'
                                   }`}
-                                  title={item.comment ? 'Edit comment' : 'Add comment'}
+                                  title={item.comment ? t('item.editComment') : t('item.addComment')}
                                 >
                                   💬
                                 </button>

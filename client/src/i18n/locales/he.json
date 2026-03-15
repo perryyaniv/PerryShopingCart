@@ -1,0 +1,109 @@
+{
+  "login": {
+    "subtitle": "הכנס את שמך כדי להתחיל",
+    "connectingServer": "מתחבר לשרת...",
+    "serverUnavailable": "השרת לא זמין. מנסה שוב...",
+    "placeholder": {
+      "selectName": "בחר או הקלד את שמך",
+      "name": "שמך"
+    },
+    "clearHistory": "נקה היסטוריית משתמשים",
+    "connecting": "מתחבר...",
+    "continue": "המשך"
+  },
+  "cart": {
+    "greeting": "היי, {{name}}!",
+    "chooseCart": "בחר את העגלה שלך",
+    "back": "→ חזרה",
+    "notYou": "→ לא {{name}}?",
+    "join": {
+      "button": "הצטרף לעגלה",
+      "subtitle": "הכנס קוד עגלה כדי להצטרף לקבוצה קיימת",
+      "instruction": "הכנס את קוד העגלה שנשלח אליך",
+      "placeholder": "קוד עגלה (לדוג' MyFamilyCart)",
+      "submit": "הצטרף לעגלה",
+      "error": "העגלה לא נמצאה"
+    },
+    "create": {
+      "button": "צור עגלה",
+      "subtitle": "התחל עגלה משותפת חדשה לקבוצה שלך",
+      "instruction": "תן לעגלה שם וקוד לשיתוף",
+      "namePlaceholder": "שם עגלה (לדוג' PerryCart)",
+      "codePlaceholder": "קוד עגלה (לדוג' perrycart)",
+      "shareHint": "שתף קוד זה עם הקבוצה שלך כדי שיוכלו להצטרף",
+      "submit": "צור עגלה"
+    }
+  },
+  "header": {
+    "welcome": "ברוך הבא, {{name}}",
+    "switchCart": "עבור לעגלה אחרת",
+    "logout": "יציאה"
+  },
+  "stats": {
+    "itemsToBuy": "פריטים לקנייה"
+  },
+  "addItem": {
+    "title": "הוסף פריט חדש",
+    "placeholder": {
+      "name": "שם פריט",
+      "qty": "כמות",
+      "comment": "הוסף הערה (אופציונלי)"
+    },
+    "adding": "מוסיף...",
+    "add": "הוסף",
+    "alreadyInList": "פריט זה כבר נמצא ברשימה שלך"
+  },
+  "category": {
+    "general": "כללי",
+    "fruitsVegetables": "פירות וירקות",
+    "fruitsVeg": "פירות וירק",
+    "bakery": "מאפיה",
+    "dairy": "מוצרי חלב",
+    "meat": "בשר",
+    "frozen": "קפוא",
+    "pantry": "מזווה"
+  },
+  "list": {
+    "tab": "רשימה",
+    "history": "היסטוריה",
+    "searchPlaceholder": "חפש פריטים...",
+    "archiveList": "ארכיון רשימה",
+    "clearList": "נקה רשימה",
+    "searchHistoryPlaceholder": "חפש פריטים בארכיון...",
+    "clearHistory": "נקה",
+    "noArchived": "לא נמצאו פריטים בארכיון",
+    "noMatchSearch": "לא נמצאו פריטים התואמים לחיפוש שלך",
+    "noMatchCriteria": "לא נמצאו פריטים התואמים לקריטריונים שלך",
+    "noItems": "אין פריטים עדיין. הוסף פריט כדי להתחיל",
+    "inList": "ברשימה",
+    "qty": "כמות: {{qty}}"
+  },
+  "item": {
+    "addNote": "הוסף הערה (מותג, גודל, מיקום...)",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "editComment": "ערוך הערה",
+    "addComment": "הוסף הערה"
+  },
+  "connection": {
+    "connected": "מחובר",
+    "disconnected": "מנותק",
+    "checking": "בודק חיבור..."
+  },
+  "notifications": {
+    "markedAsPurchased": "\"{{name}}\" סומן כנרכש",
+    "deleted": "נמחק \"{{name}}\"",
+    "commentUpdated": "ההערה עודכנה"
+  },
+  "alerts": {
+    "alreadyInList": "\"{{name}}\" כבר נמצא ברשימת הקניות שלך!",
+    "invalidQuantity": "נא הכנס כמות תקינה (1 ומעלה)",
+    "clearList": "לנקות את כל הרשימה?",
+    "deleteHistory": "למחוק רשימת קניות זו מההיסטוריה?",
+    "clearAllHistory": "למחוק את כל היסטוריית הקניות? לא ניתן לבטל פעולה זו."
+  },
+  "language": {
+    "en": "EN",
+    "he": "עב"
+  }
+}
