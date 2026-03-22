@@ -726,7 +726,7 @@ function App() {
                 className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
                   darkMode
                     ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 text-slate-800 hover:bg-gray-200'
                 }`}
               >
                 {darkMode ? (
@@ -741,7 +741,11 @@ function App() {
                     <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/>
                     <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>
                   </svg>
-                ) : '🌙'}
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/>
+                  </svg>
+                )}
               </button>
             </div>
           </div>
@@ -932,7 +936,7 @@ function App() {
                 className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
                   darkMode
                     ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 text-slate-800 hover:bg-gray-200'
                 }`}
               >
                 {darkMode ? (
@@ -947,7 +951,11 @@ function App() {
                     <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/>
                     <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>
                   </svg>
-                ) : '🌙'}
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/>
+                  </svg>
+                )}
               </button>
             </div>
           </div>
@@ -1123,7 +1131,7 @@ function App() {
                   className={`p-2 md:p-2.5 rounded-lg transition-all duration-300 ${
                     darkMode
                       ? 'bg-slate-800 text-amber-400 hover:bg-slate-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 text-slate-800 hover:bg-gray-200'
                   }`}
                 >
                   {darkMode ? (
@@ -1138,7 +1146,11 @@ function App() {
                     <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/>
                     <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/>
                   </svg>
-                ) : '🌙'}
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/>
+                  </svg>
+                )}
                 </button>
                 <button
                   onClick={handleLogout}
