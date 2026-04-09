@@ -5,7 +5,8 @@
       "Bash(netstat:*)",
       "Bash(npm install:*)",
       "Bash(find /c/Development/Projects/todo-app -not -path */node_modules/* -type f)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(find /c/Development/Projects/todo-app/client -name .env* -type f)"
     ]
   }
 }

@@ -110,8 +110,8 @@ function App() {
     if (saved) {
       const users = JSON.parse(saved)
       setPastUsers(users)
-      if (users.length > 0 && !userName) {
-        setUserName(users[0])
+      if (users.length > 0) {
+        setCurrentUser(users[0])
       }
     }
 
