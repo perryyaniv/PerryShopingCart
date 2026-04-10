@@ -40,6 +40,7 @@ function App() {
   const [historySearchQuery, setHistorySearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('active')
   const [pastUsers, setPastUsers] = useState([])
+  const [autoLoginUser, setAutoLoginUser] = useState(null)
   const [processingItems, setProcessingItems] = useState(new Set())
   const processingRef = useRef(new Set())
   const [isAdding, setIsAdding] = useState(false)
@@ -111,7 +112,8 @@ function App() {
       const users = JSON.parse(saved)
       setPastUsers(users)
       if (users.length > 0) {
-        setCurrentUser(users[0])
+        setUserName(users[0])
+        setTimeout(() => setAutoLoginUser(users[0]), 5000)
       }
     }
 
@@ -184,11 +186,23 @@ function App() {
     }
   }, [socket])
 
+  // Auto-login once server is connected (after the 5s opening screen)
+  useEffect(() => {
+    if (autoLoginUser && connectionStatus === 'connected') {
+      setCurrentUser(autoLoginUser)
+      setAutoLoginUser(null)
+      setShowDemonicMessage(true)
+      setTimeout(() => setShowDemonicMessage(false), 5000)
+    }
+  }, [autoLoginUser, connectionStatus])
+
   const handleLoginUser = () => {
     if (userName.trim()) {
       const trimmedName = userName.trim()
       setCurrentUser(trimmedName)
       setUserName('')
+      setShowDemonicMessage(true)
+      setTimeout(() => setShowDemonicMessage(false), 5000)
 
       if (!pastUsers.includes(trimmedName)) {
         const updated = [trimmedName, ...pastUsers]
