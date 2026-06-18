@@ -47,9 +47,9 @@ function App() {
   const [processingHistoryItems, setProcessingHistoryItems] = useState(new Set())
   const processingHistoryRef = useRef(new Set())
   const [showDemonicMessage, setShowDemonicMessage] = useState(false)
-  // Opening screen selector: 1 = No Rest For The Wicked, 2 = Epic Fury
+  // Opening screen selector: 1 = No Rest For The Wicked, 2 = Epic Fury, 3 = Summer Vibes
   // Add more options here as new screens are created
-  const [openingScreen] = useState(2)
+  const [openingScreen] = useState(3)
   const connectionStatus = useConnectionStatus(API_BASE_URL)
   const [editingQuantity, setEditingQuantity] = useState(null)
   const [editQuantityValue, setEditQuantityValue] = useState('')
@@ -1100,6 +1100,76 @@ function App() {
                 style={{ color: '#a0c4ff', letterSpacing: '0.3em', textShadow: '0 0 8px #4a8eff55' }}
               >
                 IRON ALLIANCE · UNITED FRONT
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* Summer Vibes Opening Screen — Opening Screen 3 */}
+        {showDemonicMessage && openingScreen === 3 && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,210,60,0.25) 0%, rgba(30,170,255,0.95) 30%, rgba(0,110,210,0.97) 65%, rgba(0,60,150,0.99) 100%)',
+              animation: 'fadeInOut 5s ease-in-out',
+            }}
+          >
+            <div className="text-center max-w-full">
+
+              {/* Sun */}
+              <div
+                className="text-6xl md:text-8xl mb-1"
+                style={{ animation: 'sunFloat 2.2s ease-in-out infinite alternate', display: 'inline-block' }}
+              >
+                ☀️
+              </div>
+
+              {/* VACATION MODE label */}
+              <div
+                className="text-sm md:text-lg font-black mb-1 tracking-widest"
+                style={{ color: '#ffe566', letterSpacing: '0.4em', textShadow: '0 0 12px #ffaa00, 0 0 24px #ff8800' }}
+              >
+                — VACATION MODE —
+              </div>
+
+              {/* SUMMER VIBES */}
+              <h1
+                className="text-5xl sm:text-7xl md:text-9xl font-black mb-5 px-2"
+                style={{
+                  color: '#ffffff',
+                  WebkitTextStroke: '2px rgba(255,200,0,0.4)',
+                  animation: 'summerGlow 1.5s ease-in-out infinite alternate',
+                  letterSpacing: '0.08em',
+                  lineHeight: '1.05',
+                }}
+              >
+                SUMMER<br />VIBES
+              </h1>
+
+              {/* Beach emoji row */}
+              <div className="flex justify-center items-end gap-3 md:gap-6 mb-4">
+                {['🌊', '🏖️', '🌴', '🍹', '😎', '🐚', '🌺'].map((emoji, i) => (
+                  <span
+                    key={emoji}
+                    className="text-3xl md:text-5xl"
+                    style={{
+                      animation: 'beachFloat 1.6s ease-in-out infinite alternate',
+                      animationDelay: `${i * 0.18}s`,
+                      display: 'inline-block',
+                    }}
+                  >
+                    {emoji}
+                  </span>
+                ))}
+              </div>
+
+              {/* Tagline */}
+              <div
+                className="text-xs md:text-sm font-bold tracking-widest uppercase"
+                style={{ color: '#d4f0ff', letterSpacing: '0.35em', textShadow: '0 0 10px rgba(100,200,255,0.5)' }}
+              >
+                LIFE IS GOOD · ENJOY THE RIDE ✈️
               </div>
 
             </div>
