@@ -54,7 +54,16 @@ function App() {
   const [isAdding, setIsAdding] = useState(false)
   const [processingHistoryItems, setProcessingHistoryItems] = useState(new Set())
   const processingHistoryRef = useRef(new Set())
-  const [showDemonicMessage, setShowDemonicMessage] = useState(false)
+  const [showDemonicMessage, setShowDemonicMessage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pastUsers')
+      if (saved) {
+        const users = JSON.parse(saved)
+        return users.length > 0
+      }
+    } catch (e) {}
+    return false
+  })
   // Opening screen selector: 1 = No Rest For The Wicked, 2 = Epic Fury, 3 = Summer Vibes
   // Add more options here as new screens are created
   const [openingScreen] = useState(3)
@@ -102,6 +111,13 @@ function App() {
   useEffect(() => {
     localStorage.setItem('darkMode', darkMode)
   }, [darkMode])
+
+  // Hide opening screen after 5s on auto-login (refresh with saved user)
+  useEffect(() => {
+    if (!showDemonicMessage) return
+    const timer = setTimeout(() => setShowDemonicMessage(false), 5000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Initial ping to establish connection status (needed when no cart is loaded yet)
   useEffect(() => {
