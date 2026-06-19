@@ -115,7 +115,7 @@ function App() {
   // Hide opening screen after 5s on auto-login (refresh with saved user)
   useEffect(() => {
     if (!showDemonicMessage) return
-    const timer = setTimeout(() => setShowDemonicMessage(false), 5000)
+    const timer = setTimeout(() => setShowDemonicMessage(false), 2500)
     return () => clearTimeout(timer)
   }, [])
 
@@ -215,7 +215,7 @@ function App() {
       setCurrentUser(trimmedName)
       setUserName('')
       setShowDemonicMessage(true)
-      setTimeout(() => setShowDemonicMessage(false), 5000)
+      setTimeout(() => setShowDemonicMessage(false), 2500)
 
       if (!pastUsers.includes(trimmedName)) {
         const updated = [trimmedName, ...pastUsers]
@@ -241,7 +241,7 @@ function App() {
       setCurrentCart(cart)
       localStorage.setItem('savedCart', JSON.stringify(cart))
       setShowDemonicMessage(true)
-      setTimeout(() => setShowDemonicMessage(false), 5000)
+      setTimeout(() => setShowDemonicMessage(false), 2500)
     } catch (err) {
       setCartError(err.response?.data?.message || 'Failed to create cart')
     }
@@ -258,7 +258,7 @@ function App() {
       setCurrentCart(cart)
       localStorage.setItem('savedCart', JSON.stringify(cart))
       setShowDemonicMessage(true)
-      setTimeout(() => setShowDemonicMessage(false), 5000)
+      setTimeout(() => setShowDemonicMessage(false), 2500)
     } catch (err) {
       setCartError(err.response?.data?.message || 'Cart not found')
     }
@@ -1000,7 +1000,7 @@ function App() {
           <div className="fixed inset-0 z-50 flex items-center justify-center animate-fadeIn px-4"
                style={{
                  background: 'radial-gradient(circle, rgba(139,0,0,0.95) 0%, rgba(0,0,0,0.98) 100%)',
-                 animation: 'fadeInOut 5s ease-in-out'
+                 animation: 'fadeInOut 2.5s ease-in-out'
                }}>
             <div className="text-center max-w-full">
               <div className="text-5xl md:text-7xl mb-4 md:mb-6 animate-bounce">
@@ -1037,7 +1037,7 @@ function App() {
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
             style={{
               background: 'radial-gradient(ellipse at center, rgba(0,10,60,0.97) 0%, rgba(0,0,20,0.99) 100%)',
-              animation: 'fadeInOut 5s ease-in-out',
+              animation: 'fadeInOut 2.5s ease-in-out',
             }}
           >
             <div className="text-center max-w-full">
@@ -1125,7 +1125,7 @@ function App() {
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
             style={{
               background: 'linear-gradient(180deg, rgba(255,210,60,0.25) 0%, rgba(30,170,255,0.95) 30%, rgba(0,110,210,0.97) 65%, rgba(0,60,150,0.99) 100%)',
-              animation: 'fadeInOut 5s ease-in-out',
+              animation: 'fadeInOut 2.5s ease-in-out',
             }}
           >
             <div className="text-center max-w-full">
