@@ -17,7 +17,16 @@ function App() {
   const { showNotification } = useNotification()
   const { recordAction, performUndo } = useUndo()
 
-  const [currentUser, setCurrentUser] = useState(null)
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pastUsers')
+      if (saved) {
+        const users = JSON.parse(saved)
+        return users.length > 0 ? users[0] : null
+      }
+    } catch (e) {}
+    return null
+  })
   const [userName, setUserName] = useState('')
   const [currentCart, setCurrentCart] = useState(null)
   const [cartMode, setCartMode] = useState(null) // null | 'create' | 'join'
@@ -40,7 +49,6 @@ function App() {
   const [historySearchQuery, setHistorySearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('active')
   const [pastUsers, setPastUsers] = useState([])
-  const [autoLoginUser, setAutoLoginUser] = useState(null)
   const [processingItems, setProcessingItems] = useState(new Set())
   const processingRef = useRef(new Set())
   const [isAdding, setIsAdding] = useState(false)
@@ -113,7 +121,6 @@ function App() {
       setPastUsers(users)
       if (users.length > 0) {
         setUserName(users[0])
-        setTimeout(() => setAutoLoginUser(users[0]), 5000)
       }
     }
 
@@ -185,16 +192,6 @@ function App() {
       socket.off('history-updated')
     }
   }, [socket])
-
-  // Auto-login once server is connected (after the 5s opening screen)
-  useEffect(() => {
-    if (autoLoginUser && connectionStatus === 'connected') {
-      setCurrentUser(autoLoginUser)
-      setAutoLoginUser(null)
-      setShowDemonicMessage(true)
-      setTimeout(() => setShowDemonicMessage(false), 5000)
-    }
-  }, [autoLoginUser, connectionStatus])
 
   const handleLoginUser = () => {
     if (userName.trim()) {
